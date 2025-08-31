@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from 'axios';
+const axios = require('axios');
 
 export interface Product {
   id: string;
@@ -94,7 +94,7 @@ export interface Order {
 }
 
 export class ShopifyClient {
-  private client: AxiosInstance;
+  private client: any;
   private storeUrl: string;
 
   constructor(storeUrl: string, accessToken: string) {

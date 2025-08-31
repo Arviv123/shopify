@@ -1,14 +1,9 @@
-import express from 'express';
-import cors from 'cors';
-import bodyParser from 'body-parser';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import { ShopifyClient } from './shopify-client.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const path = require('path');
+const fs = require('fs');
+const { ShopifyClient: ShopifyClientWS } = require('./shopify-client.js');
 
 const app = express();
 const port = process.env.WEB_PORT || 3000;
@@ -83,7 +78,7 @@ app.post('/api/connect', async (req: any, res: any) => {
     }
 
     // Test the connection
-    const shopifyClient = new ShopifyClient(storeUrl, accessToken);
+    const shopifyClient = new ShopifyClientWS(storeUrl, accessToken);
     
     try {
       // Try to fetch products to test the connection
@@ -142,7 +137,7 @@ app.post('/api/test-connection', async (req: any, res: any) => {
       return res.status(400).json({ error: 'No store connected' });
     }
 
-    const shopifyClient = new ShopifyClient(config.storeUrl, config.accessToken);
+    const shopifyClient = new ShopifyClientWS(config.storeUrl, config.accessToken);
     
     try {
       const products = await shopifyClient.searchProducts('', 5);

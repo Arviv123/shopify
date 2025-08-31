@@ -1,4 +1,4 @@
-import axios from 'axios';
+const axios = require('axios');
 
 export interface AIConfig {
   provider: 'openai' | 'anthropic' | 'gemini';

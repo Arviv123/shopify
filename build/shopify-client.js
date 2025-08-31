@@ -1,5 +1,8 @@
-import axios from 'axios';
-export class ShopifyClient {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ShopifyClient = void 0;
+const axios = require('axios');
+class ShopifyClient {
     constructor(storeUrl, accessToken) {
         this.storeUrl = storeUrl.replace(/\/$/, ''); // Remove trailing slash
         this.client = axios.create({
@@ -282,3 +285,4 @@ export class ShopifyClient {
         }
     }
 }
+exports.ShopifyClient = ShopifyClient;
