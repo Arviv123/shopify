@@ -12,8 +12,8 @@
     "forceConsistentCasingInFileNames": true,
     "strict": false,
     "noImplicitAny": false,
-    "types": ["node"],
-    "lib": ["ES2020", "DOM"]
+    "lib": ["ES2020", "DOM"],
+    "noEmitOnError": false
   },
   "include": ["src"],
   "exclude": ["node_modules", "build"]
