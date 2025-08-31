@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הגדרות שרת - Server Configuration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            direction: rtl;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+
+        .form-group .help-text {
+            margin-top: 6px;
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .status.loading {
+            background: #bee3f8;
+            color: #2c5282;
+            border: 1px solid #90cdf4;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-start;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3182ce;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2c5282;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .current-config {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .current-config h3 {
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+
+        .config-item {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .config-label {
+            font-weight: 500;
+        }
+
+        .config-value {
+            color: #718096;
+            font-family: monospace;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 הגדרות שרת</h1>
+            <p>הגדר את פרטי החיבור לשופיפי</p>
+        </div>
+
+        <div class="current-config">
+            <h3>מצב נוכחי</h3>
+            <div class="config-item">
+                <span class="config-label">כתובת חנות:</span>
+                <span class="config-value" id="current-store">לא הוגדר</span>
+            </div>
+            <div class="config-item">
+                <span class="config-label">טוקן גישה:</span>
+                <span class="config-value" id="current-token">לא הוגדר</span>
+            </div>
+            <div class="config-item">
+                <span class="config-label">סטטוס חיבור:</span>
+                <span class="config-value" id="connection-status">בודק...</span>
+            </div>
+        </div>
+
+        <div id="status-message" class="status hidden"></div>
+
+        <form id="config-form">
+            <div class="form-group">
+                <label for="store-url">כתובת חנות שופיפי</label>
+                <input 
+                    type="text" 
+                    id="store-url" 
+                    name="storeUrl"
+                    placeholder="https://your-store.myshopify.com"
+                    required
+                >
+                <div class="help-text">הכתובת המלאה של החנות בשופיפי</div>
+            </div>
+
+            <div class="form-group">
+                <label for="access-token">טוקן גישה</label>
+                <input 
+                    type="password" 
+                    id="access-token" 
+                    name="accessToken"
+                    placeholder="your_access_token_here"
+                    required
+                >
+                <div class="help-text">טוקן הגישה מהאפליקציה בשופיפי</div>
+            </div>
+
+            <div class="buttons">
+                <button type="submit" class="btn btn-primary" id="save-btn">
+                    שמור הגדרות
+                </button>
+                <button type="button" class="btn btn-secondary" id="test-btn">
+                    בדוק חיבור
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let currentConfig = {};
+
+        // Load current configuration
+        async function loadCurrentConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+                currentConfig = config;
+                
+                document.getElementById('current-store').textContent = 
+                    config.defaultStore || 'לא הוגדר';
+                document.getElementById('current-token').textContent = 
+                    config.isConnected ? '●●●●●●●●●●' : 'לא הוגדר';
+                document.getElementById('connection-status').textContent = 
+                    config.isConnected ? '✅ מחובר' : '❌ לא מחובר';
+                
+                // Pre-fill form if we have current values
+                if (config.defaultStore && config.defaultStore !== 'https://your-store.myshopify.com') {
+                    document.getElementById('store-url').value = config.defaultStore;
+                }
+            } catch (error) {
+                console.error('Failed to load config:', error);
+                showStatus('שגיאה בטעינת ההגדרות', 'error');
+            }
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('status-message');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            statusEl.classList.remove('hidden');
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusEl.classList.add('hidden');
+                }, 3000);
+            }
+        }
+
+        // Test connection
+        async function testConnection() {
+            const storeUrl = document.getElementById('store-url').value;
+            const accessToken = document.getElementById('access-token').value;
+            
+            if (!storeUrl || !accessToken) {
+                showStatus('אנא מלא את כל השדות', 'error');
+                return;
+            }
+
+            showStatus('בודק חיבור...', 'loading');
+            document.getElementById('test-btn').disabled = true;
+            
+            try {
+                const response = await fetch('/api/config/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        storeUrl,
+                        accessToken
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus('✅ החיבור הצליח!', 'success');
+                } else {
+                    showStatus(`❌ שגיאת חיבור: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus('❌ שגיאה בבדיקת החיבור', 'error');
+            } finally {
+                document.getElementById('test-btn').disabled = false;
+            }
+        }
+
+        // Save configuration
+        async function saveConfiguration(event) {
+            event.preventDefault();
+            
+            const storeUrl = document.getElementById('store-url').value;
+            const accessToken = document.getElementById('access-token').value;
+            
+            if (!storeUrl || !accessToken) {
+                showStatus('אנא מלא את כל השדות', 'error');
+                return;
+            }
+
+            showStatus('שומר הגדרות...', 'loading');
+            document.getElementById('save-btn').disabled = true;
+            
+            try {
+                const response = await fetch('/api/config/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        storeUrl,
+                        accessToken
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus('✅ ההגדרות נשמרו בהצלחה!', 'success');
+                    await loadCurrentConfig(); // Reload to show updated config
+                } else {
+                    showStatus(`❌ שגיאה בשמירה: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus('❌ שגיאה בשמירת ההגדרות', 'error');
+            } finally {
+                document.getElementById('save-btn').disabled = false;
+            }
+        }
+
+        // Event listeners
+        document.getElementById('config-form').addEventListener('submit', saveConfiguration);
+        document.getElementById('test-btn').addEventListener('click', testConnection);
+
+        // Load config on page load
+        loadCurrentConfig();
+    </script>
+</body>
+</html>
