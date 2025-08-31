@@ -84,3 +84,4 @@ ssl/
 
 # Test files
 test-results/
+create-demo-products.js

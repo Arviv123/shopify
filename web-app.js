@@ -5,7 +5,6 @@ import express from 'express';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 import { ShopifyClient } from './build/shopify-client.js';
-import { FlightAPI } from './build/flight-api.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -13,69 +12,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-// Render דורש שימוש בprocess.env.PORT ללא ברירת מחדל קבועה
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(express.json({ charset: 'utf-8' }));
-app.use(express.urlencoded({ extended: true, charset: 'utf-8' }));
-
-// Disable caching for all static files
-app.use(express.static(path.join(__dirname, 'public'), {
-  setHeaders: (res, path) => {
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-  }
-}));
-app.use('/styles', express.static(path.join(__dirname, 'public', 'styles'), {
-  setHeaders: (res, path) => {
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  }
-}));
-app.use('/js', express.static(path.join(__dirname, 'public', 'js'), {
-  setHeaders: (res, path) => {
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  }
-}));
-
-// Routes for customer chat
-app.get('/customer-chat', (req, res) => {
-  res.set({
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0'
-  });
-  res.sendFile(path.join(__dirname, 'public', 'customer-chat-v2.html'));
-});
-
-app.get('/customer-chat-v2', (req, res) => {
-  res.set({
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0'
-  });
-  res.sendFile(path.join(__dirname, 'public', 'customer-chat-v2.html'));
-});
-
-// Route for shop with no-cache
-app.get('/shop', (req, res) => {
-  res.set({
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0',
-    'Last-Modified': new Date().toUTCString()
-  });
-  res.sendFile(path.join(__dirname, 'public', 'shop.html'));
-});
+app.use(express.json());
+app.use(express.static('public'));
 
 // Store connections registry
 const storeConnections = new Map();
 const pendingOrders = new Map();
-
-// Flight API instance
-const flightAPI = new FlightAPI();
 
 // Configuration for the old interface compatibility
 app.get('/api/config', (req, res) => {
@@ -96,10 +42,6 @@ app.post('/api/connect', async (req, res) => {
       await client.searchProducts('', 1);
     } catch (testError) {
       console.error('Connection test failed:', testError.message);
-      return res.status(401).json({
-        success: false,
-        error: 'Shopify connection failed (401). Verify Admin API Access Token and scopes, then try again.'
-      });
     }
     
     const storeId = uuidv4();
@@ -137,10 +79,7 @@ app.post('/api/stores/connect', async (req, res) => {
       await client.searchProducts('', 1); // Test connection
     } catch (testError) {
       console.error('Connection test failed:', testError.message);
-      return res.status(401).json({
-        success: false,
-        error: 'Shopify connection failed (401). Verify Admin API Access Token and required scopes, then try again.'
-      });
+      // Continue anyway - may be temporary issue
     }
     
     const storeId = uuidv4();
@@ -314,121 +253,31 @@ ${products.slice(0, 5).map(p => `• ${p.title} - ₪${p.price} (${p.storeName})
   }
 }
 
-// AI response for Flights using the same provider configuration
-async function generateFlightAIResponse(query, flights, context) {
-  try {
-    // If no provider configured, return a smart demo response
-    const hasProvider = aiConfig.provider && aiConfig.provider !== 'none';
-    const hasKey = (aiConfig.provider === 'anthropic' && aiConfig.anthropicKey) ||
-                   (aiConfig.provider === 'openai' && aiConfig.openaiKey) ||
-                   (aiConfig.provider === 'gemini-free' && aiConfig.geminiFreeKey) ||
-                   (aiConfig.provider === 'huggingface' && aiConfig.huggingfaceKey) ||
-                   (aiConfig.provider === 'ollama' && aiConfig.ollamaUrl) ||
-                   (aiConfig.provider === 'deepseek' && aiConfig.deepseekKey);
-    if (!hasProvider || !hasKey) {
-      const count = flights.length;
-      if (count === 0) {
-        return 'לא נמצאו טיסות זמינות. נסו יעד/תאריכים אחרים או מחלקה אחרת.';
-      }
-      const min = Math.min(...flights.map(f => f.price?.amount || 0));
-      const max = Math.max(...flights.map(f => f.price?.amount || 0));
-      return `מצאתי ${count} טיסות ליעד שביקשתם בתאריך ${context?.departureDate}. טווח המחירים נע בין ₪${min} ל-₪${max}. מומלץ לשקול טיסה ישירה אם חשוב קיצור זמן, או עם עצירה אם המחיר חשוב יותר.`;
-    }
-
-    const axios = (await import('axios')).default;
-    const top = flights.slice(0, 5).map(f => `• ${f.airline} ${f.flightNumber || ''} – ${f.origin?.code || ''}→${f.destination?.code || ''} – ${f.price?.formatted || f.price}`).join('\n');
-    const prompt = `אתה יועץ טיסות מומחה בעברית. קיבלנו בקשת חיפוש: "${query}"\n\nהקשר: מוצא: ${context?.origin || 'TLV'}, יעד: ${context?.destination || ''}, תאריך יציאה: ${context?.departureDate || ''}, נוסעים: ${context?.passengers || 1}, מחלקה: ${context?.class || 'Economy'}.\n\nנמצאו ${flights.length} טיסות. דוגמאות:\n${top}\n\nהחזר תשובה קצרה, ממוקדת ומועילה בעברית: 1) מסקנה כללית 2) 2-3 המלצות פרקטיות (טיסה ישירה/עצירה, חברת תעופה, מחיר) 3) הצעה לשינוי תאריך/יעד אם אין תוצאות.`;
-
-    let currentApiKey;
-    switch (aiConfig.provider) {
-      case 'anthropic': currentApiKey = aiConfig.anthropicKey; break;
-      case 'openai': currentApiKey = aiConfig.openaiKey; break;
-      case 'gemini-free': currentApiKey = aiConfig.geminiFreeKey; break;
-      case 'huggingface': currentApiKey = aiConfig.huggingfaceKey; break;
-      case 'ollama': currentApiKey = aiConfig.ollamaUrl; break;
-      case 'deepseek': currentApiKey = aiConfig.deepseekKey; break;
-      default: currentApiKey = null;
-    }
-
-    if (aiConfig.provider === 'anthropic') {
-      const response = await axios.post('https://api.anthropic.com/v1/messages', {
-        model: aiConfig.model,
-        max_tokens: 250,
-        messages: [{ role: 'user', content: prompt }]
-      }, { headers: { 'Content-Type': 'application/json', 'x-api-key': currentApiKey, 'anthropic-version': '2023-06-01' } });
-      return response.data.content[0].text;
-    } else if (aiConfig.provider === 'openai') {
-      const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-        model: aiConfig.model,
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 250
-      }, { headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentApiKey}` } });
-      return response.data.choices[0].message.content;
-    } else if (aiConfig.provider === 'gemini-free') {
-      const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/${aiConfig.model}:generateContent?key=${currentApiKey}`, {
-        contents: [{ parts: [{ text: prompt }] }]
-      }, { headers: { 'Content-Type': 'application/json' } });
-      return response.data.candidates[0].content.parts[0].text;
-    } else if (aiConfig.provider === 'huggingface') {
-      const response = await axios.post(`https://api-inference.huggingface.co/models/${aiConfig.model}`, {
-        inputs: prompt,
-        parameters: { max_length: 220, temperature: 0.7 }
-      }, { headers: { 'Authorization': `Bearer ${currentApiKey}` } });
-      return response.data.generated_text || response.data[0]?.generated_text || 'תשובת AI זמינה.';
-    } else if (aiConfig.provider === 'ollama') {
-      const response = await axios.post(`${currentApiKey}/api/generate`, { model: aiConfig.model, prompt, stream: false });
-      return response.data.response;
-    } else if (aiConfig.provider === 'deepseek') {
-      const response = await axios.post('https://api.deepseek.com/v1/chat/completions', {
-        model: aiConfig.model,
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 250
-      }, { headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentApiKey}` } });
-      return response.data.choices[0].message.content;
-    }
-
-    return null;
-  } catch (error) {
-    console.error('AI flight response failed:', error.message);
-    return null;
-  }
-}
-
-// Smart store name generator based on product - Enhanced Hebrew names
+// Smart store name generator based on product
 function getSmartStoreName(product) {
   const title = product.title.toLowerCase();
   const type = product.product_type?.toLowerCase() || '';
   const vendor = product.vendor?.toLowerCase() || '';
   
-  // Map products to appropriate Hebrew store names
-  if (title.includes('laptop') || title.includes('gaming') || title.includes('computer') || title.includes('pc')) {
-    return '🖥️ טכנולוגיה ומחשבים';
-  } else if (title.includes('smartphone') || title.includes('phone') || title.includes('mobile')) {
-    return '📱 סלולר וטכנולוגיה';
-  } else if (title.includes('toddler') || title.includes('children') || title.includes('baby') || title.includes('kids') || 
-             title.includes('ילד') || title.includes('בייבי') || type.includes('clothes')) {
-    return '👶 בגדי ילדים ותינוקות';
-  } else if (title.includes('tennis') || title.includes('bike') || title.includes('sport') || title.includes('fitness')) {
-    return '🏃 ספורט וכושר';
-  } else if (title.includes('encyclopedia') || title.includes('book') || title.includes('education')) {
-    return '📚 ספרים וחינוך';
-  } else if (title.includes('garden') || title.includes('tool') || title.includes('outdoor')) {
-    return '🌱 גינה וכלי עבודה';
-  } else if (title.includes('headphone') || title.includes('audio') || title.includes('speaker')) {
-    return '🎵 אודיו ובידור';
-  } else if (title.includes('home') || title.includes('kitchen') || title.includes('cookware')) {
-    return '🏠 בית ומטבח';
-  } else if (title.includes('fashion') || title.includes('clothing') || title.includes('shirt') || 
-             title.includes('dress') || title.includes('pants')) {
-    return '👕 אופנה ובגדים';
-  } else if (title.includes('beauty') || title.includes('cosmetic') || title.includes('skincare')) {
+  // Map products to appropriate store names
+  if (title.includes('laptop') || title.includes('gaming') || title.includes('smartphone')) {
+    return '🖥️ TechMart Electronics';
+  } else if (title.includes('children') || title.includes('baby') || title.includes('ילד') || title.includes('בייבי')) {
+    return '👶 בגדי ילדים';
+  } else if (title.includes('tennis') || title.includes('bike') || title.includes('sport')) {
+    return '🏃 ספורטק';
+  } else if (title.includes('encyclopedia') || title.includes('book')) {
+    return '📚 ספרים ועוד';
+  } else if (title.includes('garden') || title.includes('tool')) {
+    return '🌱 כלי גינה';
+  } else if (title.includes('headphone') || title.includes('audio')) {
+    return '🎵 Audio Pro';
+  } else if (title.includes('home') || title.includes('kitchen')) {
+    return '🏠 בית וגינה';
+  } else if (title.includes('fashion') || title.includes('clothing')) {
+    return '👕 אופנה';
+  } else if (title.includes('beauty') || title.includes('cosmetic')) {
     return '💄 יופי וקוסמטיקה';
-  } else if (title.includes('car') || title.includes('automotive') || title.includes('vehicle')) {
-    return '🚗 רכב ואביזרים';
-  } else if (title.includes('toy') || title.includes('game') || title.includes('play')) {
-    return '🧸 צעצועים ומשחקים';
-  } else if (title.includes('health') || title.includes('medical') || title.includes('pharmacy')) {
-    return '⚕️ בריאות ותרופות';
   } else {
     return '🛍️ מרקט כללי';
   }
@@ -467,107 +316,40 @@ function generateDemoAIResponse(query, products, storeData) {
   }
 }
 
-// Hebrew to English translation for search - Enhanced dictionary
+// Hebrew to English translation for search
 function translateSearchQuery(query) {
-  console.log(`📝 translateSearchQuery received: "${query}" (type: ${typeof query})`);
   const translations = {
-    // בגדים וילדים
-    'בגדי ילדים': 'children baby kids clothes clothing toddler',
-    'ילדים': 'children baby kids toddler youth',
-    'תינוק': 'baby toddler infant',
-    'בגדים': 'clothes clothing shirt pants dress',
-    'חולצה': 'shirt t-shirt blouse top',
-    'חולצות': 'shirts t-shirts blouses tops',
-    'מכנס': 'pants trousers jeans',
-    'מכנסיים': 'pants trousers jeans',
-    'נעליים': 'shoes sneakers boots',
-    'שמלה': 'dress',
-    'חצאית': 'skirt',
-    'מעיל': 'jacket coat',
-    'סוודר': 'sweater hoodie',
-    
-    // טכנולוgiיה
-    'מחשב': 'computer laptop desktop PC',
-    'לפטופ': 'laptop computer notebook',
-    'טלפון': 'phone smartphone mobile cellphone',
-    'סמארטפון': 'smartphone phone mobile',
-    'אוזניות': 'headphones earphones headset',
-    'טלוויזיה': 'tv television screen monitor',
-    'מקלדת': 'keyboard',
-    'עכבר': 'mouse',
-    'מסך': 'screen monitor display',
-    'מצלמה': 'camera',
-    
-    // רכב
-    'רכב': 'car automotive vehicle',
-    'מכונית': 'car vehicle auto',
-    'מוצרי רכב': 'car automotive vehicle parts',
-    'אופניים': 'bicycle bike cycling',
-    'גלגלים': 'wheels tires',
-    
-    // בית וגינה
-    'כלי מטבח': 'kitchen utensils cookware',
-    'מטבח': 'kitchen cooking',
-    'סיר': 'pot pan cookware',
-    'כוס': 'cup mug glass',
-    'צלחת': 'plate dish',
-    'גינה': 'garden gardening outdoor',
-    'צמחים': 'plants flowers gardening',
-    'כלי גינה': 'garden tools gardening equipment',
-    
-    // ספרים וחינוך
-    'ספרים': 'book books encyclopedia education',
-    'ספר': 'book',
-    'אנציקלופדיה': 'encyclopedia books education',
-    'משחקים': 'games toys play',
-    'צעצועים': 'toys games children kids',
-    
-    // ספורט
-    'ספורט': 'sport sports fitness exercise',
-    'כושר': 'fitness sports exercise gym',
-    'כדור': 'ball sports',
-    'טניס': 'tennis sports',
-    'ריצה': 'running sports fitness',
-    
-    // יופי ובריאות
-    'קוסמטיקה': 'cosmetics beauty makeup',
-    'יופי': 'beauty cosmetics skincare',
-    'בריאות': 'health wellness medical',
-    'תרופות': 'medicine health pharmacy'
+    'בגדי ילדים': 'children baby kids clothes',
+    'ילדים': 'children baby kids',
+    'תינוק': 'baby',
+    'רכב': 'car automotive',
+    'מכונית': 'car',
+    'ספרים': 'book encyclopedia',
+    'מוצרי רכב': 'car automotive',
+    'בגדים': 'clothes shirt pants',
+    'חולצה': 'shirt',
+    'מכנסיים': 'pants',
+    'נעליים': 'shoes',
+    'אוזניות': 'headphones',
+    'טלפון': 'phone',
+    'מחשב': 'computer laptop',
+    'טלוויזיה': 'tv television'
   };
   
   let searchTerms = [query]; // Always include original query
   
-  // Add exact matches first
+  // Add Hebrew translations
   Object.keys(translations).forEach(hebrew => {
-    console.log(`🔍 Checking if "${query.toLowerCase()}" includes "${hebrew.toLowerCase()}"`);
     if (query.toLowerCase().includes(hebrew.toLowerCase())) {
-      console.log(`✅ Match found! Adding: ${translations[hebrew]}`);
-      searchTerms.push(translations[hebrew]);
-      // Also add individual words from translation
-      translations[hebrew].split(' ').forEach(word => {
-        if (word.length > 2 && !searchTerms.includes(word)) {
-          searchTerms.push(word);
-        }
-      });
-    }
-  });
-  
-  // Add fuzzy matching for partial words
-  const queryLower = query.toLowerCase();
-  Object.keys(translations).forEach(hebrew => {
-    if (queryLower.includes(hebrew.substring(0, Math.min(3, hebrew.length))) && 
-        !searchTerms.includes(translations[hebrew])) {
       searchTerms.push(translations[hebrew]);
     }
   });
   
-  return searchTerms.slice(0, 8); // Limit to 8 search terms to avoid API overload
+  return searchTerms;
 }
 
 // Chat-based product search across all stores
 app.post('/api/chat/search', async (req, res) => {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
   try {
     const { query, storeId } = req.body;
     
@@ -597,22 +379,16 @@ app.post('/api/chat/search', async (req, res) => {
       // Search across all stores with Hebrew translation support
       const allResults = [];
       const searchTerms = translateSearchQuery(query);
-      console.log(`🔍 Searching for: "${query}"`);
-      console.log(`🔤 Translated terms: ${searchTerms.join(', ')}`);
+      console.log(`Searching for: ${query}, translated terms: ${searchTerms.join(', ')}`);
       
       for (const [id, store] of storeConnections) {
-        const storeName = store.name || store.storeName || 'חנות לא מזוהה';
-        console.log(`🏪 Searching in store: ${storeName}`);
         try {
           // Try all search terms and collect unique results
           const seenProducts = new Set();
           
           for (const searchTerm of searchTerms) {
-            console.log(`   ➤ Trying search term: "${searchTerm}"`);
             try {
               const products = await store.client.searchProducts(searchTerm, 10);
-              console.log(`   ✅ Found ${products.length} products for "${searchTerm}"`);
-              
               products.forEach(p => {
                 if (!seenProducts.has(p.id)) {
                   seenProducts.add(p.id);
@@ -629,15 +405,13 @@ app.post('/api/chat/search', async (req, res) => {
                 }
               });
             } catch (searchError) {
-              console.log(`   ❌ Search term "${searchTerm}" failed for store ${store.name}: ${searchError.message}`);
+              console.log(`Search term "${searchTerm}" failed for store ${store.name}: ${searchError.message}`);
             }
           }
         } catch (error) {
-          console.error(`❌ Search failed for store ${store.name}:`, error.message);
+          console.error(`Search failed for store ${store.name}:`, error.message);
         }
       }
-      
-      console.log(`🎯 Total unique products found: ${allResults.length}`);
       
       // Sort by price for better comparison
       allResults.sort((a, b) => parseFloat(a.price || '0') - parseFloat(b.price || '0'));
@@ -699,7 +473,8 @@ app.post('/api/orders/create', async (req, res) => {
     }
     
     // Get product details to get variant ID
-    const product = await store.client.getProduct(productId);
+    const products = await store.client.listProducts(100);
+    const product = products.find(p => p.id.toString() === productId.toString());
     
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
@@ -711,17 +486,15 @@ app.post('/api/orders/create', async (req, res) => {
       return res.status(400).json({ error: 'No variants available' });
     }
     
-    // Create comprehensive customer info
+    // Create default customer info if not provided
     const defaultCustomer = {
       email: customerInfo?.email || 'customer@example.com',
       firstName: customerInfo?.firstName || 'לקוח',
-      lastName: customerInfo?.lastName || 'חדש',
-      phone: customerInfo?.phone || null,
-      acceptsMarketing: customerInfo?.marketing || false
+      lastName: customerInfo?.lastName || 'חדש'
     };
     
     const defaultAddress = {
-      address1: customerInfo?.address || 'רחוב ראשי 1',
+      address1: 'רחוב ראשי 1',
       city: 'תל אביב',
       province: 'מרכז',
       country: 'IL',
@@ -741,7 +514,7 @@ app.post('/api/orders/create', async (req, res) => {
     const orderTrackingId = uuidv4();
     
     // Store order for tracking
-    const orderData = {
+    orderTracker.set(orderTrackingId, {
       orderId: order.id,
       orderNumber: order.order_number || order.name,
       storeId,
@@ -749,29 +522,13 @@ app.post('/api/orders/create', async (req, res) => {
       productTitle,
       productPrice,
       quantity,
-      customer: {
-        email: defaultCustomer.email,
-        firstName: customerInfo?.firstName || 'לקוח',
-        lastName: customerInfo?.lastName || 'חדש',
-        phone: defaultCustomer.phone,
-        acceptsMarketing: defaultCustomer.acceptsMarketing
-      },
+      customer: defaultCustomer,
       total: order.total_price,
       currency: 'ILS',
       status: 'pending_payment',
       createdAt: new Date(),
-      shopifyOrder: order,
-      items: [{
-        title: productTitle,
-        name: productTitle,
-        price: productPrice,
-        quantity: quantity
-      }]
-    };
-    
-    // Store in both maps
-    orderTracker.set(orderTrackingId, orderData);
-    pendingOrders.set(orderTrackingId, orderData);
+      shopifyOrder: order
+    });
     
     res.json({
       success: true,
@@ -780,9 +537,7 @@ app.post('/api/orders/create', async (req, res) => {
       trackingId: orderTrackingId,
       total: order.total_price,
       currency: 'ILS',
-      customerEmail: defaultCustomer.email,
-      message: 'Order created successfully in Shopify!',
-      emailNote: 'Shopify will send an order confirmation email automatically'
+      message: 'Order created successfully in Shopify!'
     });
     
   } catch (error) {
@@ -938,9 +693,6 @@ app.post('/api/orders/:trackingId/pay', (req, res) => {
     order.paidAt = new Date();
     order.paymentMethod = paymentMethod;
     
-    // Remove from pending orders after payment
-    pendingOrders.delete(trackingId);
-    
     res.json({ 
       success: true, 
       message: 'Payment completed successfully!',
@@ -952,36 +704,6 @@ app.post('/api/orders/:trackingId/pay', (req, res) => {
         currency: order.currency,
         paidAt: order.paidAt
       }
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Complete order payment (alternative endpoint for checkout page)
-app.post('/api/orders/complete/:token', (req, res) => {
-  try {
-    const { token } = req.params;
-    const order = pendingOrders.get(token);
-    
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found or already completed' });
-    }
-    
-    // Update order status to paid
-    const trackedOrder = orderTracker.get(token);
-    if (trackedOrder) {
-      trackedOrder.status = 'paid';
-      trackedOrder.paidAt = new Date();
-    }
-    
-    // Remove from pending orders
-    pendingOrders.delete(token);
-    
-    res.json({ 
-      success: true, 
-      message: 'Payment completed successfully!',
-      redirect: '/confirmation'
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1297,477 +1019,24 @@ app.get('/api/claude-config', (req, res) => {
   });
 });
 
-// Admin reset endpoints (DEV ONLY) - clear stores and reset AI config
-app.post('/api/admin/reset', (req, res) => {
-  try {
-    storeConnections.clear();
-    pendingOrders.clear();
-    aiConfig.provider = 'none';
-    aiConfig.model = 'claude-3-sonnet-20240229';
-    aiConfig.anthropicKey = '';
-    aiConfig.openaiKey = '';
-    aiConfig.geminiFreeKey = '';
-    aiConfig.huggingfaceKey = '';
-    aiConfig.ollamaUrl = 'http://localhost:11434';
-    aiConfig.deepseekKey = '';
-    res.json({ success: true, message: 'Server reset: all stores cleared, AI disabled' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.get('/api/admin/reset', (req, res) => {
-  storeConnections.clear();
-  pendingOrders.clear();
-  aiConfig.provider = 'none';
-  aiConfig.model = 'claude-3-sonnet-20240229';
-  aiConfig.anthropicKey = '';
-  aiConfig.openaiKey = '';
-  aiConfig.geminiFreeKey = '';
-  aiConfig.huggingfaceKey = '';
-  aiConfig.ollamaUrl = 'http://localhost:11434';
-  aiConfig.deepseekKey = '';
-  res.json({ success: true, message: 'Server reset: all stores cleared, AI disabled' });
-});
-
-// Default route - serve the new modular dashboard
+// Default route - serve main interface
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Store manager route
 app.get('/store-manager', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+  res.sendFile(path.join(__dirname, 'public', 'store-manager.html'));
 });
 
 // Alternative route to bypass cache
 app.get('/shop-manager', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
-});
-
-// Friendly routes for direct navigation
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
-});
-
-app.get('/chat', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
-});
-
-// Customer interface route
-app.get('/customer', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'shop.html'));
-});
-
-
-// Flights route for customers
-app.get('/flights', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'flights.html'));
-});
-
-// ===== FLIGHT API ENDPOINTS =====
-
-// Search flights
-app.post('/api/flights/search', async (req, res) => {
-  try {
-    console.log('✈️ Flight search request:', req.body);
-    const result = await flightAPI.searchFlights(req.body);
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Flight search error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-// Get flight details
-app.get('/api/flights/:flightId', async (req, res) => {
-  try {
-    const { flightId } = req.params;
-    const result = await flightAPI.getFlightDetails(flightId);
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-// Get popular destinations
-app.get('/api/flights/destinations/:origin?', async (req, res) => {
-  try {
-    const { origin = 'TLV' } = req.params;
-    const { limit = 10 } = req.query;
-    const result = await flightAPI.getPopularDestinations(origin, parseInt(limit));
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-// Search airports
-app.get('/api/flights/airports/search', async (req, res) => {
-  try {
-    const { q: query } = req.query;
-    if (!query) {
-      return res.status(400).json({
-        success: false,
-        error: 'Query parameter "q" is required'
-      });
-    }
-    const result = await flightAPI.searchAirports(query);
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-// Book flight
-app.post('/api/flights/:flightId/book', async (req, res) => {
-  try {
-    const { flightId } = req.params;
-    const passengerInfo = req.body;
-    const result = await flightAPI.bookFlight(flightId, passengerInfo);
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-// Chat endpoint with MCP flight integration
-app.post('/api/chat/flights', async (req, res) => {
-  try {
-    const { query } = req.body;
-    console.log('🛫 MCP Flight chat query:', query);
-    
-    // Use AI with MCP to process the query and enrich with configured AI provider
-    const parsed = await processFlightQueryWithAI(query);
-    if (parsed?.success) {
-      const flightsArr = Array.isArray(parsed.flights) ? parsed.flights : [];
-      const aiText = await generateFlightAIResponse(query, flightsArr, parsed.searchParams || {});
-      return res.json({ ...parsed, aiResponse: aiText || parsed.aiResponse });
-    }
-    return res.json(parsed || { success: false, error: 'Unknown error' });
-  } catch (error) {
-    console.error('❌ MCP Flight chat error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-// MCP-powered AI flight query processor
-async function processFlightQueryWithAI(query) {
-  try {
-    // For demo purposes, we'll simulate AI processing with intelligent parsing
-    const queryLower = query.toLowerCase();
-    
-    // Extract destinations from common Hebrew/English terms
-    const destinations = {
-      'ניו יורק': 'JFK', 'new york': 'JFK', 'ny': 'JFK',
-      'לונדון': 'LHR', 'london': 'LHR',
-      'פריז': 'CDG', 'paris': 'CDG',
-      'רומא': 'FCO', 'rome': 'FCO',
-      'איסטנבול': 'IST', 'istanbul': 'IST',
-      'דובאי': 'DXB', 'dubai': 'DXB',
-      'פרנקפורט': 'FRA', 'frankfurt': 'FRA',
-      'לוס אנג\'לס': 'LAX', 'los angeles': 'LAX', 'la': 'LAX'
-    };
-    
-    // Find destination in query
-    let destination = null;
-    for (const [city, code] of Object.entries(destinations)) {
-      if (queryLower.includes(city)) {
-        destination = code;
-        break;
-      }
-    }
-    
-    // Extract date patterns
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    let departureDate = tomorrow.toISOString().split('T')[0];
-    
-    // Look for date patterns like "מחר", "עוד שבוע", etc.
-    if (queryLower.includes('מחר') || queryLower.includes('tomorrow')) {
-      // Already set to tomorrow
-    } else if (queryLower.includes('עוד שבוע') || queryLower.includes('next week')) {
-      const nextWeek = new Date();
-      nextWeek.setDate(nextWeek.getDate() + 7);
-      departureDate = nextWeek.toISOString().split('T')[0];
-    }
-    
-    // Extract passenger count
-    let passengers = 1;
-    const passengerMatch = query.match(/(\d+)\s*(נוסעים|passengers|people)/i);
-    if (passengerMatch) {
-      passengers = parseInt(passengerMatch[1]);
-    }
-    
-    // Extract class preference
-    let travelClass = 'Economy';
-    if (queryLower.includes('עסקים') || queryLower.includes('business')) {
-      travelClass = 'Business';
-    } else if (queryLower.includes('ראשונה') || queryLower.includes('first class')) {
-      travelClass = 'First';
-    }
-    
-    // If we have a destination, search flights using MCP-style call
-    if (destination) {
-      const searchParams = {
-        origin: 'TLV',
-        destination,
-        departureDate,
-        passengers,
-        class: travelClass
-      };
-      
-      console.log('🔍 MCP Flight search params:', searchParams);
-      
-      // Call our flight API (simulating MCP tool call)
-      const flightResult = await flightAPI.searchFlights(searchParams);
-      
-      if (flightResult.success && flightResult.flights && flightResult.flights.length > 0) {
-        return {
-          success: true,
-          aiResponse: `🛫 מצאתי עבורכם ${flightResult.flights.length} טיסות ל${getDestinationName(destination)}!\n\n💡 **AI הבין מהשאילתה שלכם:**\n• יעד: ${getDestinationName(destination)}\n• תאריך: ${departureDate}\n• נוסעים: ${passengers}\n• מחלקה: ${travelClass === 'Economy' ? 'תייר' : travelClass}`,
-          flights: flightResult.flights,
-          totalFlights: flightResult.flights.length,
-          searchParams,
-          mcpProcessing: true
-        };
-      } else {
-        return {
-          success: true,
-          aiResponse: `🤔 לא מצאתי טיסות ל${getDestinationName(destination)} בתאריך ${departureDate}.\n\nהאמי מבין את הבקשה שלכם אבל אין טיסות זמינות. נסו:\n• תאריך אחר\n• יעד אחר\n• פחות נוסעים`,
-          flights: [],
-          totalFlights: 0,
-          mcpProcessing: true
-        };
-      }
-    } else {
-      // General flight help with popular destinations
-      const popularDestinations = await flightAPI.getPopularDestinations('TLV', 6);
-      
-      return {
-        success: true,
-        aiResponse: `🤖 **AI מנתח את הבקשה שלכם...**\n\nהאמי הבין שאתם רוצים לחפש טיסות, אבל לא זיהה יעד ספציפי.\n\n✈️ **יעדים פופולריים מתל אביב:**`,
-        popularDestinations: popularDestinations.destinations || [],
-        helpMessage: '💡 **עצות לחיפוש טוב יותר:**\nכתבו למשל: "טיסה לניו יורק מחר" או "רוצה לטוס ללונדון עם 2 נוסעים במחלקת עסקים"',
-        mcpProcessing: true
-      };
-    }
-    
-  } catch (error) {
-    console.error('❌ AI processing error:', error);
-    return {
-      success: false,
-      error: `AI processing failed: ${error.message}`,
-      mcpProcessing: true
-    };
-  }
-}
-
-// Helper function to get destination name
-function getDestinationName(code) {
-  const destinations = {
-    'JFK': 'ניו יורק',
-    'LHR': 'לונדון',
-    'CDG': 'פריז',
-    'FCO': 'רומא',
-    'IST': 'איסטנבול',
-    'DXB': 'דובאי',
-    'FRA': 'פרנקפורט',
-    'LAX': 'לוס אנג\'לס'
-  };
-  return destinations[code] || code;
-}
-
-// ===== PROFILE MANAGEMENT API =====
-app.post('/api/profile/save', (req, res) => {
-  try {
-    console.log('💾 Saving user profile:', req.body);
-    
-    // In a real implementation, you'd save to database
-    // For now, we'll just return success
-    const profileData = {
-      ...req.body,
-      savedAt: new Date().toISOString(),
-      id: 'user_' + Date.now()
-    };
-    
-    res.json({
-      success: true,
-      message: 'הפרופיל נשמר בהצלחה',
-      profile: profileData
-    });
-  } catch (error) {
-    console.error('❌ Profile save error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'שגיאה בשמירת הפרופיל'
-    });
-  }
-});
-
-app.get('/api/profile', (req, res) => {
-  try {
-    // Return empty profile for demo
-    res.json({
-      success: true,
-      profile: {}
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'שגיאה בטעינת הפרופיל'
-    });
-  }
-});
-
-// ===== CART MANAGEMENT API =====
-app.post('/api/cart/add', (req, res) => {
-  try {
-    const { productId, quantity = 1, variant } = req.body;
-    console.log('🛒 Adding to cart:', { productId, quantity, variant });
-    
-    res.json({
-      success: true,
-      message: 'המוצר נוסף לעגלה',
-      cart: {
-        items: [
-          {
-            id: productId,
-            quantity: quantity,
-            variant: variant,
-            addedAt: new Date().toISOString()
-          }
-        ],
-        totalItems: quantity
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'שגיאה בהוספה לעגלה'
-    });
-  }
-});
-
-app.get('/api/cart', (req, res) => {
-  try {
-    res.json({
-      success: true,
-      cart: {
-        items: [],
-        totalItems: 0,
-        totalPrice: 0
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'שגיאה בטעינת העגלה'
-    });
-  }
-});
-
-app.delete('/api/cart/remove/:productId', (req, res) => {
-  try {
-    const { productId } = req.params;
-    console.log('🗑️ Removing from cart:', productId);
-    
-    res.json({
-      success: true,
-      message: 'המוצר הוסר מהעגלה'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'שגיאה בהסרה מהעגלה'
-    });
-  }
-});
-
-// ===== PRODUCT COMPARISON API =====
-app.post('/api/compare-products', async (req, res) => {
-  try {
-    const { products, useAI = false } = req.body;
-    console.log('⚖️ Comparing products:', { products, useAI });
-    
-    // Mock comparison for now
-    const comparison = {
-      manual: {
-        products: products || [],
-        comparisonTable: {}
-      },
-      ai: useAI ? {
-        summary: 'השוואה חכמה - המוצר הראשון מומלץ יותר',
-        pros: { },
-        cons: { },
-        recommendation: 'בחר את המוצר הראשון'
-      } : null
-    };
-    
-    res.json({
-      success: true,
-      comparison
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'שגיאה בהשוואה'
-    });
-  }
-});
-
-// Health check endpoint (required by Render)
-app.get('/health', (req, res) => {
-  res.status(200).send('ok');
-});
-
-// Extended health check with details
-app.get('/health/detailed', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    service: 'mcp-shopify-server',
-    version: '1.0.0',
-    port: PORT,
-    env: process.env.NODE_ENV || 'development'
-  });
-});
-
-// Graceful shutdown for Render rolling updates
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully...');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully...');
-  process.exit(0);
+  res.sendFile(path.join(__dirname, 'public', 'store-manager.html'));
 });
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 MCP Shopify Server running on port ${PORT}`);
-  console.log(`📊 Dashboard: /dashboard`);
-  console.log(`💬 Chat: /chat`);
-  console.log(`🛍️ Shop: /shop`);
-  console.log(`🏥 Health: /health`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+app.listen(PORT, () => {
+  console.log(`🚀 Professional Multi-Store Interface running at http://localhost:${PORT}`);
+  console.log(`📊 Store owner dashboard: http://localhost:${PORT}/dashboard`);
+  console.log(`💬 Chat interface: http://localhost:${PORT}/chat`);
 });
