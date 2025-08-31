@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ErrorCode, ListToolsRequestSchema, McpError, } from "@modelcontextprotocol/sdk/types.js";
-import { ShopifyClient } from "./shopify-client.js";
-import { FlightAPI } from "./flight-api.js";
+const { Server } = require("@modelcontextprotocol/sdk/server/index.js");
+const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio.js");
+const { CallToolRequestSchema, ErrorCode, ListToolsRequestSchema, McpError, } = require("@modelcontextprotocol/sdk/types.js");
+const { ShopifyClient } = require("./shopify-client.js");
+const { FlightAPI } = require("./flight-api.js");
 // Get Shopify configuration from environment variables
 const SHOPIFY_STORE_URL = process.env.SHOPIFY_STORE_URL;
 const SHOPIFY_ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
@@ -638,4 +638,3 @@ async function main() {
     console.error("Shopify MCP server running on stdio");
 }
 main().catch(console.error);
-//# sourceMappingURL=index.js.map

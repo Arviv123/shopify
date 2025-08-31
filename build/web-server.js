@@ -1,13 +1,9 @@
-import express from 'express';
-import cors from 'cors';
-import bodyParser from 'body-parser';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import { ShopifyClient } from './shopify-client.js';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const path = require('path');
+const fs = require('fs');
+const { ShopifyClient: ShopifyClientWS } = require('./shopify-client.js');
 const app = express();
 const port = process.env.WEB_PORT || 3000;
 // Middleware
@@ -67,7 +63,7 @@ app.post('/api/connect', async (req, res) => {
             return res.status(400).json({ error: 'Invalid store URL format. Should be: https://your-store.myshopify.com' });
         }
         // Test the connection
-        const shopifyClient = new ShopifyClient(storeUrl, accessToken);
+        const shopifyClient = new ShopifyClientWS(storeUrl, accessToken);
         try {
             // Try to fetch products to test the connection
             await shopifyClient.searchProducts('', 1);
@@ -119,7 +115,7 @@ app.post('/api/test-connection', async (req, res) => {
         if (!config || !config.isConnected) {
             return res.status(400).json({ error: 'No store connected' });
         }
-        const shopifyClient = new ShopifyClient(config.storeUrl, config.accessToken);
+        const shopifyClient = new ShopifyClientWS(config.storeUrl, config.accessToken);
         try {
             const products = await shopifyClient.searchProducts('', 5);
             res.json({
@@ -168,4 +164,3 @@ app.listen(port, () => {
     console.log(`🌐 Shopify MCP Configuration Server running at http://localhost:${port}`);
     console.log(`📝 Open your browser to configure your Shopify connection`);
 });
-//# sourceMappingURL=web-server.js.map

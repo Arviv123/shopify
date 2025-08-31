@@ -1,14 +1,9 @@
-import express, { Request, Response } from 'express';
-import cors from 'cors';
-import bodyParser from 'body-parser';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import { ShopifyClient } from './shopify-client.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const path = require('path');
+const fs = require('fs');
+const { ShopifyClient: ShopifyClientWS } = require('./shopify-client.js');
 
 const app = express();
 const port = process.env.WEB_PORT || 3000;
@@ -52,7 +47,7 @@ function saveConfig(config: ShopifyConfig): void {
 }
 
 // API Routes
-app.get('/api/config', (req: Request, res: Response) => {
+app.get('/api/config', (req: any, res: any) => {
   const config = loadConfig();
   if (config) {
     // Don't send the access token to the client
@@ -68,7 +63,7 @@ app.get('/api/config', (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/connect', async (req: Request, res: Response) => {
+app.post('/api/connect', async (req: any, res: any) => {
   try {
     const { storeUrl, accessToken } = req.body;
 
@@ -83,7 +78,7 @@ app.post('/api/connect', async (req: Request, res: Response) => {
     }
 
     // Test the connection
-    const shopifyClient = new ShopifyClient(storeUrl, accessToken);
+    const shopifyClient = new ShopifyClientWS(storeUrl, accessToken);
     
     try {
       // Try to fetch products to test the connection
@@ -121,7 +116,7 @@ app.post('/api/connect', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/disconnect', (req: Request, res: Response) => {
+app.post('/api/disconnect', (req: any, res: any) => {
   try {
     const config = loadConfig();
     if (config) {
@@ -135,14 +130,14 @@ app.post('/api/disconnect', (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/test-connection', async (req: Request, res: Response) => {
+app.post('/api/test-connection', async (req: any, res: any) => {
   try {
     const config = loadConfig();
     if (!config || !config.isConnected) {
       return res.status(400).json({ error: 'No store connected' });
     }
 
-    const shopifyClient = new ShopifyClient(config.storeUrl, config.accessToken);
+    const shopifyClient = new ShopifyClientWS(config.storeUrl, config.accessToken);
     
     try {
       const products = await shopifyClient.searchProducts('', 5);
@@ -164,7 +159,7 @@ app.post('/api/test-connection', async (req: Request, res: Response) => {
 });
 
 // Generate Claude Desktop configuration
-app.get('/api/claude-config', (req: Request, res: Response) => {
+app.get('/api/claude-config', (req: any, res: any) => {
   const config = loadConfig();
   if (!config || !config.isConnected) {
     return res.status(400).json({ error: 'No store connected' });
@@ -189,7 +184,7 @@ app.get('/api/claude-config', (req: Request, res: Response) => {
 });
 
 // Serve the main HTML page
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (req: any, res: any) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 

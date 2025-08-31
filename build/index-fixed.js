@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ErrorCode, ListToolsRequestSchema, McpError, } from "@modelcontextprotocol/sdk/types.js";
-import { ShopifyClient } from "./shopify-client.js";
+const { Server } = require("@modelcontextprotocol/sdk/types.js");
+const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio.js");
+const { CallToolRequestSchema, ErrorCode, ListToolsRequestSchema, McpError, } = require("@modelcontextprotocol/sdk/types.js");
+const { ShopifyClient } = require("./shopify-client.js");
 class ShopifyMCPServer {
     constructor() {
         this.server = new Server({
@@ -271,4 +271,3 @@ async function main() {
     await server.run();
 }
 main().catch(console.error);
-//# sourceMappingURL=index-fixed.js.map
