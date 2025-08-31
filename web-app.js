@@ -1,15 +1,11 @@
 #!/usr/bin/env node
 
-// Professional Multi-Store Web Interface - Render Optimized
-import express from 'express';
-import cors from 'cors';
-import { v4 as uuidv4 } from 'uuid';
-import { ShopifyClient } from './build/shopify-client.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Professional Multi-Store Web Interface - Render Optimized (CommonJS)
+const express = require('express');
+const cors = require('cors');
+const { v4: uuidv4 } = require('uuid');
+const { ShopifyClient } = require('./shopify-client.js');
+const path = require('path');
 
 const app = express();
 // Render requires process.env.PORT
@@ -235,119 +231,6 @@ app.post('/api/chat/search', async (req, res) => {
   }
 });
 
-// API: Create order
-app.post('/api/order/create', async (req, res) => {
-  try {
-    const { productId, storeId, quantity = 1, customerInfo = {} } = req.body;
-    
-    const store = storeConnections.get(storeId || 'default-store');
-    if (!store) {
-      return res.status(404).json({ error: 'Store not found' });
-    }
-
-    // Get product details
-    const products = await store.client.listProducts(100);
-    const product = products.find(p => p.id.toString() === productId.toString());
-    
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    const variantId = product.variants[0]?.id;
-    if (!variantId) {
-      return res.status(400).json({ error: 'No variants available' });
-    }
-
-    // Default customer info
-    const defaultCustomer = {
-      email: customerInfo.email || 'customer@example.com',
-      firstName: customerInfo.firstName || 'לקוח',
-      lastName: customerInfo.lastName || 'חדש'
-    };
-
-    const defaultAddress = {
-      address1: 'רחוב ראשי 1',
-      city: 'תל אביב', 
-      province: 'מרכז',
-      country: 'IL',
-      zip: '12345'
-    };
-
-    const lineItems = [{
-      variant_id: variantId,
-      quantity: quantity,
-      price: product.variants[0].price
-    }];
-
-    // Create order
-    const order = await store.client.createOrder(lineItems, defaultCustomer, defaultAddress);
-    
-    const trackingId = uuidv4();
-    orderTracker.set(trackingId, {
-      orderId: order.id,
-      orderNumber: order.order_number || order.name,
-      storeId,
-      storeName: store.name,
-      productTitle: product.title,
-      quantity,
-      customer: defaultCustomer,
-      total: order.total_price,
-      currency: 'ILS',
-      status: 'pending_payment',
-      createdAt: new Date(),
-      shopifyOrder: order
-    });
-
-    res.json({
-      success: true,
-      orderId: order.id,
-      orderNumber: order.order_number || order.name,
-      trackingId: trackingId,
-      total: order.total_price,
-      currency: 'ILS',
-      message: 'Order created successfully!'
-    });
-
-  } catch (error) {
-    console.error('Order creation error:', error);
-    res.status(400).json({ 
-      error: 'Order creation failed', 
-      message: error.message,
-      success: false 
-    });
-  }
-});
-
-// API: Track order
-app.get('/api/order/track/:trackingId', (req, res) => {
-  try {
-    const { trackingId } = req.params;
-    const order = orderTracker.get(trackingId);
-    
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-
-    res.json({
-      success: true,
-      order: {
-        trackingId,
-        orderNumber: order.orderNumber,
-        productTitle: order.productTitle,
-        quantity: order.quantity,
-        total: order.total,
-        currency: order.currency,
-        status: order.status,
-        storeName: order.storeName,
-        createdAt: order.createdAt
-      }
-    });
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // Simple response generator
 function generateSimpleResponse(query, products) {
   const count = products.length;
@@ -374,39 +257,21 @@ function generateSimpleResponse(query, products) {
 }
 
 // Static file routes
-app.get('/shop', (req, res) => {
-  res.set({
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
-    'Pragma': 'no-cache', 
-    'Expires': '0',
-    'Last-Modified': new Date().toUTCString()
-  });
-  res.sendFile(path.join(__dirname, 'public', 'shop.html'));
-});
-
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
-});
-
 app.get('/config', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'config.html'));
 });
 
-app.get('/chat', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
-});
-
-app.get('/flights', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'flights.html'));
-});
-
-app.get('/customer', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'shop.html'));
-});
-
 // Default route
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.send(`
+    <h1>🚀 MCP Shopify Server</h1>
+    <p>Server is running successfully!</p>
+    <ul>
+      <li><a href="/config">⚙️ Configuration Interface</a></li>
+      <li><a href="/health">🏥 Health Check</a></li>
+      <li><a href="/health/detailed">📊 Detailed Health Check</a></li>
+    </ul>
+  `);
 });
 
 // Graceful shutdown for Render rolling updates
@@ -423,11 +288,8 @@ process.on('SIGINT', () => {
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 MCP Shopify Server running on port ${PORT}`);
-  console.log(`📊 Dashboard: /dashboard`);
-  console.log(`💬 Chat: /chat`);
-  console.log(`🛍️ Shop: /shop`);
-  console.log(`🔧 Config: /config`);
-  console.log(`🏥 Health: /health`);
+  console.log(`🔧 Config: http://localhost:${PORT}/config`);
+  console.log(`🏥 Health: http://localhost:${PORT}/health`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Store: ${runtimeConfig.storeUrl || 'Not configured - visit /config'}`);
   console.log(`Connected stores: ${storeConnections.size}`);
