@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת ניהול חנויות מתקדמת</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <link rel="stylesheet" href="styles/chat.css">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">🏪 מערכת ניהול חנויות מתקדמת</div>
+        <div class="tagline">פלטפורמה מקצועית לניהול מספר חנויות עם ממשק צ'אט חכם</div>
+    </div>
+
+    <div class="container">
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab active" onclick="showTab('stores')">🏪 דשבורד חנויות</button>
+            <button class="tab" onclick="showTab('chat')">💬 צ'אט מכירות</button>
+            <button class="tab" onclick="showTab('connect')">🔗 חיבור חנות חדשה</button>
+            <button class="tab" onclick="showTab('ai-config')">🤖 הגדרות AI</button>
+            <button class="tab" onclick="showTab('admin')">🧼 איפוס השרת</button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div id="stores" class="tab-content">
+            <div id="stores-container"></div>
+        </div>
+
+        <div id="chat" class="tab-content hidden">
+            <div id="chat-container"></div>
+        </div>
+
+        <div id="connect" class="tab-content hidden">
+            <div id="connect-container"></div>
+        </div>
+
+        <div id="ai-config" class="tab-content hidden">
+            <div id="ai-config-container"></div>
+        </div>
+
+        <div id="admin" class="tab-content hidden">
+            <div id="admin-container"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/stores.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/connect.js"></script>
+    <script src="js/ai-config.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "shopify-mcp-server": {
+      "command": "node",
+      "args": [
+        "C:\\mcp\\shopify-mcp-server\\build\\index.js"
+      ],
+      "env": {
+        "SHOPIFY_STORE_URL": "https://your-store.myshopify.com",
+        "SHOPIFY_ACCESS_TOKEN": "shpat_your_token_here"
+      }
+    }
+  }
+}

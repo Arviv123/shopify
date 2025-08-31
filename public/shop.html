@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatShop - קנה חכם עם AI</title>
+    <meta http-equiv="cache-control" content="no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="pragma" content="no-cache">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Neutral colors to match the screenshot's clean, light theme */
+            --main-bg: #f8f8f8;
+            --white: #ffffff;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --border-light: #dddddd;
+            --border-lighter: #eeeeee;
+            --shadow-soft: rgba(0, 0, 0, 0.1);
+            --input-bg: #ffffff;
+            --input-border: #dddddd;
+            --sidebar-bg: #ffffff;
+            --selected-bg: #f0f0f0;
+            --icon-color: #000000;
+            --compare-color: #ff6b35;
+            --cart-color: #10b981;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--main-bg);
+            min-height: 100vh;
+            direction: rtl;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar matching the screenshot exactly */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-lighter);
+            padding: 20px 16px;
+            overflow-y: auto;
+            height: 100vh;
+        }
+
+        .sidebar-search {
+            background: var(--selected-bg);
+            border-radius: 24px;
+            padding: 8px 16px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            border: none;
+            width: 100%;
+            text-align: right;
+        }
+
+        .sidebar-list {
+            list-style: none;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 15px;
+            border-radius: 8px;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .sidebar-item:hover {
+            background: var(--selected-bg);
+        }
+
+        .sidebar-item.selected {
+            background: var(--selected-bg);
+        }
+
+        .sidebar-icon {
+            font-size: 18px;
+            color: var(--icon-color);
+        }
+
+        .sidebar-history {
+            margin-top: 16px;
+        }
+
+        .sidebar-history-title {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-history-month {
+            font-size: 14px;
+            color: var(--text-secondary);
+            padding: 4px 12px;
+        }
+
+        .sidebar-history-item {
+            font-size: 14px;
+            color: var(--text-primary);
+            padding: 4px 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .sidebar-history-item:hover {
+            background: var(--selected-bg);
+        }
+
+        /* Top bar matching the screenshot */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            right: 20px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .top-private {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .top-bell {
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        /* Main content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Initial screen matching the screenshot exactly */
+        .initial-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            gap: 8px;
+        }
+
+        .logo {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            color: var(--text-primary);
+        }
+
+        .tagline {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .input-area {
+            width: 700px;
+            max-width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 32px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 1px 3px var(--shadow-soft);
+            transition: box-shadow 0.2s;
+        }
+
+        .input-area:focus-within {
+            box-shadow: 0 2px 6px var(--shadow-soft);
+        }
+
+        .auto-mode {
+            font-size: 14px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .chat-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            background: transparent;
+            resize: none;
+            min-height: 24px;
+            max-height: 120px;
+            font-family: inherit;
+            color: var(--text-primary);
+        }
+
+        .mic-icon {
+            font-size: 20px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .feature-buttons {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+        }
+
+        .feature-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 16px;
+            transition: background 0.2s;
+        }
+
+        .feature-button:hover {
+            background: var(--selected-bg);
+        }
+
+        /* Chat container (hidden initially, matches Grok chat mode) */
+        .chat-container {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            background: var(--main-bg);
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .message {
+            margin-bottom: 24px;
+            line-height: 1.5;
+            font-size: 16px;
+        }
+
+        .message.user {
+            text-align: left;
+            color: var(--text-primary);
+        }
+
+        .message.bot {
+            text-align: right;
+            color: var(--text-primary);
+        }
+
+        .message-content {
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .user .message-content {
+            margin-left: auto;
+        }
+
+        .bot .message-content {
+            margin-right: auto;
+        }
+
+        /* Products grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .product-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .product-card:hover {
+            border-color: var(--text-secondary);
+            box-shadow: 0 4px 12px var(--shadow-soft);
+            transform: translateY(-2px);
+        }
+
+        .product-card.selected {
+            border-color: var(--compare-color);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+        }
+
+        .product-badges {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            display: flex;
+            gap: 4px;
+            flex-direction: column;
+        }
+
+        .badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .badge.in-cart {
+            background: var(--cart-color);
+        }
+
+        .badge.in-compare {
+            background: var(--compare-color);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background: var(--selected-bg);
+        }
+
+        .product-image.placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 48px;
+        }
+
+        .product-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .product-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .product-store {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            background: var(--selected-bg);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-view, .btn-add-to-cart, .btn-compare {
+            flex: 1;
+            min-width: 80px;
+            background: var(--selected-bg);
+            color: var(--text-primary);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-view:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-add-to-cart {
+            background: var(--cart-color);
+            color: var(--white);
+        }
+
+        .btn-add-to-cart:hover {
+            background: #059669;
+        }
+
+        .btn-compare {
+            background: var(--compare-color);
+            color: var(--white);
+        }
+
+        .btn-compare:hover {
+            background: #e55a2b;
+        }
+
+        .btn-compare.active {
+            background: #d14a21;
+        }
+
+        /* Input container for chat mode */
+        .input-container {
+            background: var(--white);
+            border-top: 1px solid var(--border-light);
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            background: var(--selected-bg);
+            border-radius: 24px;
+            padding: 12px 20px;
+            border: none;
+            transition: background 0.2s;
+        }
+
+        .input-wrapper:focus-within {
+            background: #e8e8e8;
+        }
+
+        .send-button {
+            background: transparent;
+            color: var(--text-primary);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: background 0.2s;
+        }
+
+        .send-button:hover {
+            background: #dddddd;
+        }
+
+        .send-button:disabled {
+            color: #aaaaaa;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            font-style: italic;
+            text-align: center;
+        }
+
+        .typing-indicator.active {
+            display: block;
+        }
+
+        /* User Profile and Cart */
+        .user-profile {
+            position: absolute;
+            top: 0;
+            left: 20px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .profile-btn, .cart-btn, .compare-btn {
+            font-size: 18px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .profile-btn:hover, .cart-btn:hover, .compare-btn:hover {
+            background: var(--selected-bg);
+        }
+
+        .cart-count, .compare-count {
+            background: var(--cart-color);
+            color: var(--white);
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            margin-right: 4px;
+        }
+
+        .compare-count {
+            background: var(--compare-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+
+            .input-area {
+                width: 100%;
+            }
+
+            .feature-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 12px;
+            }
+
+            .product-actions {
+                flex-direction: column;
+            }
+
+            .btn-view, .btn-add-to-cart, .btn-compare {
+                flex: none;
+                width: 100%;
+            }
+        }
+
+        /* Compare modal styles */
+        .compare-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: none;
+        }
+
+        .compare-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--white);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .compare-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .compare-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .compare-item {
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .ai-compare-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 16px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <span class="top-private">Private</span>
+        <span class="top-bell">🔔</span>
+    </div>
+
+    <div class="user-profile">
+        <span class="profile-btn" onclick="showProfileForm()">👤 פרופיל</span>
+        <span class="cart-btn" onclick="showCart()">🛒 עגלה <span id="cartCount" class="cart-count">0</span></span>
+        <span class="compare-btn" onclick="showCompare()">⚖️ השוואה <span id="compareCount" class="compare-count">0</span></span>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar adapted for shop context -->
+        <div class="sidebar">
+            <input type="text" class="sidebar-search" placeholder="Search Ctrl+K" readonly>
+
+            <ul class="sidebar-list">
+                <li class="sidebar-item selected">
+                    <span class="sidebar-icon">💬</span>
+                    צ'אט קנייה
+                </li>
+                <li class="sidebar-item" onclick="location.href='/flights'">
+                    <span class="sidebar-icon">✈️</span>
+                    טיסות
+                </li>
+                <li class="sidebar-item">
+                    <span class="sidebar-icon">📦</span>
+                    מוצרים
+                </li>
+                <li class="sidebar-item">
+                    <span class="sidebar-icon">🛒</span>
+                    הזמנות
+                </li>
+                <li class="sidebar-item" onclick="location.href='/dashboard'">
+                    <span class="sidebar-icon">📊</span>
+                    ניהול חנות
+                </li>
+                <li class="sidebar-item sidebar-history">
+                    <span class="sidebar-icon">📜</span>
+                    היסטוריית קניות
+                    <ul class="sidebar-list">
+                        <li class="sidebar-history-month">אוגוסט</li>
+                        <li class="sidebar-history-item" onclick="searchHistory('לפטופ גיימינג')">חיפוש לפטופ גיימינג</li>
+                        <li class="sidebar-history-item" onclick="searchHistory('נעלי ריצה')">השוואת מחירי נעלי ריצה</li>
+                        <li class="sidebar-history-item" onclick="searchHistory('טלוויזיה חכמה')">הזמנת טלוויזיה חכמה</li>
+                        <li class="sidebar-history-item">עדכון כתובת למשלוח</li>
+                        <li class="sidebar-history-item">מעקב אחר הזמנה #12345</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main content -->
+        <div class="main-content">
+            <!-- Initial screen exact match -->
+            <div class="initial-screen" id="initialScreen">
+                <div class="logo">🛍️ ChatShop</div>
+                <div class="tagline">מה תרצו לדעת?</div>
+                <div class="input-area">
+                    <div class="auto-mode">⏺ Auto v</div>
+                    <textarea 
+                        class="chat-input" 
+                        id="initialChatInput" 
+                        placeholder="חפשו מוצרים כאן... (למשל: 'לפטופ גיימינג' או 'נעלי ריצה')"
+                        rows="1"
+                    ></textarea>
+                    <span class="mic-icon">🎤</span>
+                </div>
+                <div class="feature-buttons">
+                    <div class="feature-button"><span>🔍</span> חיפוש מוצרים</div>
+                    <div class="feature-button"><span>🖼️</span> הדמיית מוצרים</div>
+                    <div class="feature-button"><span>📰</span> מבצעים אחרונים</div>
+                    <div class="feature-button"><span>👤</span> פרופילי קנייה</div>
+                </div>
+            </div>
+
+            <!-- Chat container (hidden initially) -->
+            <div class="chat-container" id="chatContainer">
+                <div class="messages-container" id="messagesContainer"></div>
+                <div class="typing-indicator" id="typingIndicator">
+                    🤖 ChatShop AI כותב תשובה...
+                </div>
+                <div class="input-container">
+                    <div class="input-wrapper">
+                        <textarea 
+                            class="chat-input" 
+                            id="chatInput" 
+                            placeholder="חפשו מוצרים כאן... (למשל: 'לפטופ גיימינג' או 'נעלי ריצה')"
+                            rows="1"
+                        ></textarea>
+                        <button class="send-button" id="sendButton">➤</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compare Modal -->
+    <div class="compare-modal" id="compareModal">
+        <div class="compare-modal-content">
+            <div class="compare-header">
+                <h2>השוואת מוצרים</h2>
+                <button class="compare-close" onclick="closeCompare()">&times;</button>
+            </div>
+            <div id="compareGrid" class="compare-grid"></div>
+            <button class="ai-compare-btn" onclick="aiCompare()">🤖 השווה עם AI</button>
+        </div>
+    </div>
+
+    <!-- Scripts (adapted to handle initial screen switch) -->
+    <script>
+        // Global variables
+        let stores = [];
+        let isLoading = false;
+        let isChatStarted = false;
+        let cart = [];
+        let compareList = [];
+        let userProfile = {};
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            setupInitialInput();
+            setupChatInput();
+            loadCart();
+            loadCompare();
+            loadUserProfile();
+            updateCartCount();
+            updateCompareCount();
+        });
+
+        // Load statistics (not displayed, but kept for functionality)
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stores');
+                const data = await response.json();
+                
+                stores = data.stores || [];
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Setup initial input handlers
+        function setupInitialInput() {
+            const input = document.getElementById('initialChatInput');
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    startChat();
+                }
+            });
+
+            input.addEventListener('input', () => {
+                input.style.height = 'auto';
+                input.style.height = input.scrollHeight + 'px';
+            });
+        }
+
+        // Setup chat input handlers
+        function setupChatInput() {
+            const input = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendButton');
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            input.addEventListener('input', () => {
+                input.style.height = 'auto';
+                input.style.height = input.scrollHeight + 'px';
+                sendBtn.disabled = !input.value.trim();
+            });
+        }
+
+        // Start chat from initial screen
+        async function startChat() {
+            const input = document.getElementById('initialChatInput');
+            const message = input.value.trim();
+            
+            if (!message || isLoading) return;
+
+            // Switch to chat mode
+            document.getElementById('initialScreen').style.display = 'none';
+            document.getElementById('chatContainer').style.display = 'flex';
+
+            // Add welcome message
+            addMessage(`
+                שלום! 👋 אני ChatShop AI - העוזר הקנייה החכם שלכם!
+                <br><br>
+                🎯 אני יכול לעזור לכם:
+                <br>• למצוא מוצרים מכל החנויות במקום אחד
+                <br>• להשוות מחירים ולמצוא את העסקה הטובה ביותר
+                <br>• לקבל המלצות אישיות מבוססות בינה מלאכותית
+                <br>• להזמין ישירות מהצ'אט
+                <br>• להשוות מוצרים עם בינה מלאכותית מתקדמת
+                <br><br>
+                מה תרצו לחפש היום? 🔍
+            `, 'bot');
+
+            // Proceed with sending the message
+            await sendMessageFromInitial(message);
+        }
+
+        // Search from history
+        function searchHistory(query) {
+            // Switch to chat mode if not already
+            if (document.getElementById('initialScreen').style.display !== 'none') {
+                document.getElementById('initialScreen').style.display = 'none';
+                document.getElementById('chatContainer').style.display = 'flex';
+            }
+            
+            // Add message and search
+            addMessage(query, 'user');
+            performSearch(query);
+        }
+
+        // Send message from initial
+        async function sendMessageFromInitial(message) {
+            addMessage(message, 'user');
+            await performSearch(message);
+        }
+
+        // Send message (from chat mode)
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message || isLoading) return;
+
+            addMessage(message, 'user');
+            input.value = '';
+            input.style.height = 'auto';
+            
+            await performSearch(message);
+        }
+
+        // Perform search
+        async function performSearch(message) {
+            showTyping(true);
+            isLoading = true;
+
+            try {
+                const response = await fetch('/api/chat/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: message })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    addBotResponse(data);
+                } else {
+                    addMessage('❌ שגיאה בחיפוש: ' + (data.error || 'לא ידועה'), 'bot');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('❌ שגיאת רשת: ' + error.message, 'bot');
+            } finally {
+                showTyping(false);
+                isLoading = false;
+                document.getElementById('sendButton').disabled = false;
+            }
+        }
+
+        // Add message to chat (simplified, no avatars)
+        function addMessage(content, sender) {
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${content}</div>
+            `;
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Add bot response with products (enhanced with compare and cart features)
+        function addBotResponse(data) {
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            
+            let responseText = data.aiResponse || `מצאתי עבורכם ${data.totalProducts} מוצרים מ-${data.totalStores} חנויות! 🎉`;
+            
+            let productsHtml = '';
+            if (data.products && data.products.length > 0) {
+                productsHtml = '<div class="products-grid">';
+                data.products.slice(0, 6).forEach(product => {
+                    const imageHtml = product.image 
+                        ? `<img src="${product.image}" alt="${product.title}" class="product-image">` 
+                        : `<div class="product-image placeholder">📦</div>`;
+                    
+                    const productUrl = `https://${getStoreDomain(product.storeId)}/products/${product.handle || product.id}`;
+                    const isInCart = cart.some(item => item.productId === product.id);
+                    const isInCompare = compareList.some(item => item.id === product.id);
+                    
+                    let badges = '';
+                    if (isInCart) badges += '<div class="badge in-cart">בסל</div>';
+                    if (isInCompare) badges += '<div class="badge in-compare">להשוואה</div>';
+                    
+                    productsHtml += `
+                        <div class="product-card ${isInCompare ? 'selected' : ''}">
+                            <div class="product-badges">${badges}</div>
+                            ${imageHtml}
+                            <div class="product-title">${product.title}</div>
+                            <div class="product-price">₪${product.price}</div>
+                            <div class="product-store">🏪 ${product.storeName}</div>
+                            ${product.vendor ? `<div class="product-vendor">📦 ${product.vendor}</div>` : ''}
+                            <div class="product-actions">
+                                <button class="btn-view" onclick="viewProductDetails('${product.id}', '${product.storeId}', '${productUrl}')">
+                                    👁️ פרטים
+                                </button>
+                                <button class="btn-add-to-cart ${isInCart ? '' : ''}" onclick="addToCart('${product.id}', '${product.storeId}', '${escapeHtml(product.title)}', '${product.price}', '${product.image || ''}', '${product.storeName}')">
+                                    🛒 ${isInCart ? 'בסל' : 'הוסף לסל'}
+                                </button>
+                                <button class="btn-compare ${isInCompare ? 'active' : ''}" onclick="toggleCompare('${product.id}', '${escapeHtml(product.title)}', '${product.price}', '${product.image || ''}', '${product.storeName}')">
+                                    ⚖️ ${isInCompare ? 'הוסר' : 'השווה'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                productsHtml += '</div>';
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    ${responseText}
+                    ${productsHtml}
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Show/hide typing indicator
+        function showTyping(show) {
+            const indicator = document.getElementById('typingIndicator');
+            indicator.className = show ? 'typing-indicator active' : 'typing-indicator';
+            
+            if (show) {
+                const container = document.getElementById('messagesContainer');
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        // Get store domain from store ID
+        function getStoreDomain(storeId) {
+            const store = stores.find(s => s.id === storeId);
+            if (store && store.url) {
+                return store.url.replace('https://', '').replace('http://', '');
+            }
+            return 'store.myshopify.com';
+        }
+
+        // Escape HTML for safe display
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // View product details with link
+        function viewProductDetails(productId, storeId, productUrl) {
+            addMessage(`🔍 מציג פרטי מוצר...`, 'user');
+            
+            const store = stores.find(s => s.id === storeId);
+            const storeName = store ? store.name : 'החנות';
+            
+            addMessage(`
+                📋 <strong>פרטי המוצר:</strong><br>
+                🆔 מזהה: ${productId}<br>
+                🏪 חנות: ${storeName}<br>
+                🔗 קישור לחנות: <a href="${productUrl}" target="_blank" style="color: var(--text-secondary); text-decoration: underline;">${productUrl}</a><br>
+                <br>
+                לחצו על הקישור לצפייה באתר החנות הרשמי 👆
+            `, 'bot');
+        }
+
+        // Toggle compare list
+        function toggleCompare(productId, title, price, image, storeName) {
+            const existingIndex = compareList.findIndex(item => item.id === productId);
+            
+            if (existingIndex > -1) {
+                compareList.splice(existingIndex, 1);
+                addMessage(`❌ המוצר "${title}" הוסר מההשוואה`, 'bot');
+            } else {
+                if (compareList.length >= 4) {
+                    addMessage('⚠️ ניתן להשוות עד 4 מוצרים בו-זמנית', 'bot');
+                    return;
+                }
+                compareList.push({ id: productId, title, price, image, storeName });
+                addMessage(`✅ המוצר "${title}" נוסף להשוואה`, 'bot');
+            }
+            
+            saveCompare();
+            updateCompareCount();
+            refreshProductCards();
+        }
+
+        // Add to cart
+        function addToCart(productId, storeId, title, price, image, storeName) {
+            const existingIndex = cart.findIndex(item => item.productId === productId);
+            
+            if (existingIndex > -1) {
+                addMessage(`ℹ️ המוצר "${title}" כבר נמצא בעגלה`, 'bot');
+                return;
+            }
+            
+            const product = { productId, storeId, title, price, image, storeName };
+            cart.push(product);
+            saveCart();
+            updateCartCount();
+            addMessage(`✅ המוצר "${title}" נוסף לעגלה!`, 'bot');
+            refreshProductCards();
+        }
+
+        // Refresh product cards to show updated badges
+        function refreshProductCards() {
+            // This would ideally re-render the last product grid
+            // For simplicity, we'll just update the counts
+            updateCartCount();
+            updateCompareCount();
+        }
+
+        // Load/save cart and compare from localStorage
+        function loadCart() {
+            const savedCart = localStorage.getItem('chatShopCart');
+            if (savedCart) {
+                cart = JSON.parse(savedCart);
+            }
+        }
+
+        function saveCart() {
+            localStorage.setItem('chatShopCart', JSON.stringify(cart));
+        }
+
+        function loadCompare() {
+            const savedCompare = localStorage.getItem('chatShopCompare');
+            if (savedCompare) {
+                compareList = JSON.parse(savedCompare);
+            }
+        }
+
+        function saveCompare() {
+            localStorage.setItem('chatShopCompare', JSON.stringify(compareList));
+        }
+
+        // Update counts
+        function updateCartCount() {
+            document.getElementById('cartCount').textContent = cart.length;
+        }
+
+        function updateCompareCount() {
+            document.getElementById('compareCount').textContent = compareList.length;
+        }
+
+        // Show chat container
+        function showChatContainer() {
+            // Hide initial screen and show chat
+            document.getElementById('initialScreen').style.display = 'none';
+            document.getElementById('chatContainer').style.display = 'flex';
+        }
+
+        // Show cart
+        function showCart() {
+            console.log('showCart called');
+            showChatContainer();
+            let cartHtml = '<h3>🛒 העגלה שלך</h3>';
+            if (cart.length === 0) {
+                cartHtml += 'העגלה ריקה.';
+            } else {
+                cartHtml += '<div class="products-grid">';
+                cart.forEach((product, index) => {
+                    const imageHtml = product.image ? `<img src="${product.image}" alt="${product.title}" class="product-image">` : `<div class="product-image placeholder">📦</div>`;
+                    cartHtml += `
+                        <div class="product-card">
+                            ${imageHtml}
+                            <div class="product-title">${product.title}</div>
+                            <div class="product-price">₪${product.price}</div>
+                            <div class="product-store">🏪 ${product.storeName}</div>
+                            <div class="product-actions">
+                                <button class="btn-view" onclick="removeFromCart(${index})">
+                                    ❌ הסר
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                cartHtml += '</div>';
+                cartHtml += '<button onclick="startCartCheckout()" style="background: var(--cart-color); color: var(--white); border: none; padding: 15px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 20px; width: 100%;">✅ הזמן את כל העגלה</button>';
+            }
+            addMessage(cartHtml, 'bot');
+        }
+
+        // Show compare modal
+        function showCompare() {
+            console.log('showCompare called');
+            showChatContainer();
+            if (compareList.length === 0) {
+                addMessage('⚠️ רשימת ההשוואה ריקה. הוסיפו מוצרים להשוואה תחילה.', 'bot');
+                return;
+            }
+            
+            const modal = document.getElementById('compareModal');
+            const grid = document.getElementById('compareGrid');
+            
+            grid.innerHTML = '';
+            compareList.forEach((product, index) => {
+                const imageHtml = product.image ? `<img src="${product.image}" alt="${product.title}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;">` : `<div style="width: 100%; height: 120px; background: var(--selected-bg); border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📦</div>`;
+                
+                grid.innerHTML += `
+                    <div class="compare-item">
+                        ${imageHtml}
+                        <h4>${product.title}</h4>
+                        <div style="font-size: 18px; font-weight: 600; margin: 8px 0;">₪${product.price}</div>
+                        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;">🏪 ${product.storeName}</div>
+                        <button onclick="removeFromCompare(${index})" style="background: var(--compare-color); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; width: 100%;">
+                            ❌ הסר מההשוואה
+                        </button>
+                    </div>
+                `;
+            });
+            
+            modal.style.display = 'block';
+        }
+
+        // Close compare modal
+        function closeCompare() {
+            document.getElementById('compareModal').style.display = 'none';
+        }
+
+        // AI compare
+        function aiCompare() {
+            closeCompare();
+            
+            if (compareList.length < 2) {
+                addMessage('⚠️ נדרשים לפחות 2 מוצרים להשוואה עם AI', 'bot');
+                return;
+            }
+            
+            addMessage('🤖 מבצע השוואה חכמה עם AI...', 'user');
+            
+            // Simulate AI analysis
+            setTimeout(() => {
+                let compareText = '🧠 <strong>ניתוח השוואה חכם:</strong><br><br>';
+                
+                const prices = compareList.map(p => parseFloat(p.price));
+                const minPrice = Math.min(...prices);
+                const maxPrice = Math.max(...prices);
+                const cheapest = compareList.find(p => parseFloat(p.price) === minPrice);
+                const mostExpensive = compareList.find(p => parseFloat(p.price) === maxPrice);
+                
+                compareText += `💰 <strong>השוואת מחירים:</strong><br>`;
+                compareList.forEach(product => {
+                    const isLowest = parseFloat(product.price) === minPrice;
+                    compareText += `• ${product.title}: ₪${product.price} ${isLowest ? '🥇 (הזול ביותר)' : ''}<br>`;
+                });
+                
+                compareText += `<br>🎯 <strong>המלצת AI:</strong><br>`;
+                compareText += `המוצר "${cheapest.title}" מציע את המחיר הטוב ביותר ב-₪${cheapest.price}. `;
+                
+                if (compareList.length > 2) {
+                    compareText += `ההפרש הגדול ביותר הוא ₪${(maxPrice - minPrice).toFixed(2)} בין המוצר הזול ביותר ליקר ביותר.`;
+                }
+                
+                compareText += `<br><br>💡 <strong>עצות נוספות:</strong><br>`;
+                compareText += `• בדקו ביקורות לקוחות לפני הרכישה<br>`;
+                compareText += `• השוו תנאי האחריות והמשלוח<br>`;
+                compareText += `• שקלו את המוניטין של החנות<br>`;
+                
+                addMessage(compareText, 'bot');
+            }, 2000);
+        }
+
+        // Remove from compare
+        function removeFromCompare(index) {
+            const removed = compareList.splice(index, 1)[0];
+            saveCompare();
+            updateCompareCount();
+            addMessage(`❌ המוצר "${removed.title}" הוסר מההשוואה`, 'bot');
+            showCompare(); // Refresh the modal
+        }
+
+        // Remove from cart
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            saveCart();
+            updateCartCount();
+            showCart();
+        }
+
+        // Start checkout for entire cart
+        function startCartCheckout() {
+            if (cart.length === 0) {
+                addMessage('❌ העגלה ריקה', 'bot');
+                return;
+            }
+            showCheckoutFormForCart();
+        }
+
+        // Load user profile from localStorage
+        function loadUserProfile() {
+            const savedProfile = localStorage.getItem('chatShopProfile');
+            if (savedProfile) {
+                userProfile = JSON.parse(savedProfile);
+            }
+        }
+
+        // Save user profile to localStorage
+        function saveUserProfile() {
+            localStorage.setItem('chatShopProfile', JSON.stringify(userProfile));
+        }
+
+        // Show profile form
+        function showProfileForm() {
+            console.log('showProfileForm called');
+            showChatContainer();
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <div style="background: var(--white); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light); max-width: 500px;">
+                        <h3 style="color: var(--text-primary); margin-bottom: 15px;">👤 פרופיל משתמש</h3>
+                        <form id="profileForm" onsubmit="submitProfile(event)">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">שם פרטי</label>
+                                    <input type="text" name="firstName" value="${userProfile.firstName || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px;" placeholder="הכנס שם פרטי">
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">שם משפחה</label>
+                                    <input type="text" name="lastName" value="${userProfile.lastName || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px;" placeholder="הכנס שם משפחה">
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">אימייל</label>
+                                <input type="email" name="email" value="${userProfile.email || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px;" placeholder="example@email.com">
+                            </div>
+                            
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">טלפון</label>
+                                <input type="tel" name="phone" value="${userProfile.phone || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px;" placeholder="050-1234567">
+                            </div>
+                            
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">כתובת למשלוח</label>
+                                <input type="text" name="address" value="${userProfile.address || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px;" placeholder="רחוב ומספר בית">
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">עיר</label>
+                                    <input type="text" name="city" value="${userProfile.city || 'תל אביב'}" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px;" placeholder="תל אביב">
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">מיקוד</label>
+                                    <input type="text" name="zip" value="${userProfile.zip || '12345'}" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px;" placeholder="12345">
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px;">
+                                <button type="submit" style="flex: 1; background: var(--cart-color); color: var(--white); border: none; padding: 15px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                                    ✅ שמור פרופיל
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Submit profile
+        function submitProfile(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            userProfile = {
+                firstName: formData.get('firstName'),
+                lastName: formData.get('lastName'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                address: formData.get('address'),
+                city: formData.get('city'),
+                zip: formData.get('zip')
+            };
+            
+            saveUserProfile();
+            addMessage('✅ הפרופיל נשמר בהצלחה! עכשיו ההזמנות יתמלאו אוטומטית עם הפרטים שלכם.', 'bot');
+        }
+
+        // Show checkout form for cart (prefill from profile)
+        function showCheckoutFormForCart() {
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            
+            let totalPrice = 0;
+            cart.forEach(item => totalPrice += parseFloat(item.price));
+            
+            let cartSummary = '<h3>🛒 סיכום עגלה</h3>';
+            cart.forEach(item => {
+                cartSummary += `<div style="padding: 8px; border-bottom: 1px solid var(--border-lighter);">${item.title} - ₪${item.price}</div>`;
+            });
+            cartSummary += `<div style="padding: 12px 8px; font-weight: 700; font-size: 18px; border-top: 2px solid var(--border-light);"><strong>סה"כ: ₪${totalPrice.toFixed(2)}</strong></div>`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <div style="background: var(--white); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light); max-width: 600px;">
+                        ${cartSummary}
+                        <form id="cartCheckoutForm" onsubmit="submitCartOrder(event)" style="margin-top: 20px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">שם פרטי *</label>
+                                    <input type="text" name="firstName" required value="${userProfile.firstName || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px;" placeholder="הכנס שם פרטי">
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">שם משפחה *</label>
+                                    <input type="text" name="lastName" required value="${userProfile.lastName || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px;" placeholder="הכנס שם משפחה">
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">אימייל *</label>
+                                <input type="email" name="email" required value="${userProfile.email || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px;" placeholder="example@email.com">
+                            </div>
+                            
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">טלפון</label>
+                                <input type="tel" name="phone" value="${userProfile.phone || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px;" placeholder="050-1234567">
+                            </div>
+                            
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">כתובת למשלוח *</label>
+                                <input type="text" name="address" required value="${userProfile.address || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px;" placeholder="רחוב ומספר בית">
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">עיר *</label>
+                                    <input type="text" name="city" required value="${userProfile.city || 'תל אביב'}" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px;" placeholder="תל אביב">
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">מיקוד</label>
+                                    <input type="text" name="zip" value="${userProfile.zip || '12345'}" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px;" placeholder="12345">
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px;">
+                                <button type="submit" style="flex: 1; background: var(--cart-color); color: var(--white); border: none; padding: 15px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                                    ✅ השלם הזמנה - ₪${totalPrice.toFixed(2)}
+                                </button>
+                                <button type="button" onclick="cancelCheckout()" style="background: var(--text-secondary); color: var(--white); border: none; padding: 15px 20px; border-radius: 8px; cursor: pointer;">
+                                    ❌ ביטול
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Submit order for cart
+        async function submitCartOrder(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            const customerInfo = {
+                firstName: formData.get('firstName'),
+                lastName: formData.get('lastName'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                address: formData.get('address'),
+                city: formData.get('city'),
+                zip: formData.get('zip')
+            };
+            
+            addMessage(`🔄 מעבד הזמנה עבור ${customerInfo.firstName} ${customerInfo.lastName}...`, 'user');
+            
+            try {
+                // Create orders for each item in cart
+                const orderPromises = cart.map(item => 
+                    fetch('/api/orders/create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            productId: item.productId,
+                            storeId: item.storeId,
+                            quantity: 1,
+                            productTitle: item.title,
+                            productPrice: item.price,
+                            customerInfo
+                        })
+                    }).then(res => res.json())
+                );
+
+                const results = await Promise.all(orderPromises);
+                const successful = results.filter(r => r.success);
+                
+                if (successful.length > 0) {
+                    cart = [];
+                    saveCart();
+                    updateCartCount();
+                    showCartOrderConfirmation(successful, customerInfo);
+                } else {
+                    addMessage(`❌ שגיאה ביצירת הזמנות`, 'bot');
+                }
+            } catch (error) {
+                addMessage(`❌ שגיאה ביצירת הזמנה: ${error.message}`, 'bot');
+            }
+        }
+
+        // Show order confirmation for cart
+        function showCartOrderConfirmation(orderResults, customerInfo) {
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            
+            let productsList = '<div style="margin-bottom: 16px;">';
+            let totalPrice = 0;
+            orderResults.forEach((result, index) => {
+                productsList += `<div style="padding: 8px; border-bottom: 1px solid var(--border-lighter);">הזמנה #${result.orderNumber} - ₪${result.total}</div>`;
+                totalPrice += parseFloat(result.total);
+            });
+            productsList += '</div>';
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <div style="background: var(--selected-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light); max-width: 600px;">
+                        <h3 style="color: var(--text-primary); margin-bottom: 15px;">✅ ${orderResults.length} הזמנות נוצרו בהצלחה!</h3>
+                        
+                        <div style="background: var(--white); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                            <div style="font-weight: 600; margin-bottom: 12px;">הזמנות:</div>
+                            ${productsList}
+                            <div style="color: var(--text-primary); font-weight: 700; font-size: 18px;">סה"כ: ₪${totalPrice.toFixed(2)}</div>
+                            
+                            <div style="font-size: 14px; color: var(--text-secondary); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-lighter);">
+                                📧 <strong>לקוח:</strong> ${customerInfo.firstName} ${customerInfo.lastName}<br>
+                                📨 <strong>אימייל:</strong> ${customerInfo.email}<br>
+                                📱 <strong>טלפון:</strong> ${customerInfo.phone || 'לא צוין'}<br>
+                                📍 <strong>כתובת:</strong> ${customerInfo.address}, ${customerInfo.city}
+                            </div>
+                        </div>
+                        
+                        <div style="background: var(--white); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--cart-color);">
+                            💳 <strong>להשלמת התשלום:</strong><br>
+                            Shopify ישלח אימיילים אישור הזמנה עם קישורים לתשלום
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            ${orderResults.map(result => `
+                                <button onclick="trackOrder('${result.trackingId}')" style="background: var(--selected-bg); color: var(--text-primary); border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-bottom: 8px;">
+                                    📦 מעקב #${result.orderNumber}
+                                </button>
+                                <button onclick="payOrder('${result.trackingId}')" style="background: var(--cart-color); color: var(--white); border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-bottom: 8px;">
+                                    💳 תשלום #${result.orderNumber}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Cancel checkout
+        function cancelCheckout() {
+            addMessage('❌ ההזמנה בוטלה', 'bot');
+        }
+
+        // Track order
+        async function trackOrder(trackingId) {
+            addMessage(`📦 בודק סטטוס הזמנה ${trackingId}...`, 'user');
+            
+            try {
+                const response = await fetch(`/api/orders/${trackingId}/status`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const order = result.order;
+                    addMessage(`
+                        📋 <strong>מעקב הזמנה:</strong><br>
+                        🆔 מספר: ${order.orderNumber}<br>
+                        📦 מוצר: ${order.productTitle}<br>
+                        💰 סכום: ₪${order.total}<br>
+                        📅 תאריך: ${new Date(order.createdAt).toLocaleDateString('he-IL')}<br>
+                        🟡 סטטוס: ${order.status === 'pending_payment' ? 'ממתין לתשלום' : order.status}
+                    `, 'bot');
+                } else {
+                    addMessage(`❌ לא נמצאה הזמנה עם מזהה ${trackingId}`, 'bot');
+                }
+            } catch (error) {
+                addMessage(`❌ שגיאה במעקב: ${error.message}`, 'bot');
+            }
+        }
+
+        // Pay for order
+        function payOrder(trackingId) {
+            addMessage(`💳 מפנה לתשלום עבור הזמנה ${trackingId}...`, 'user');
+            
+            // Open payment page in new window
+            const paymentUrl = `/checkout/${trackingId}`;
+            window.open(paymentUrl, '_blank');
+            
+            addMessage(`
+                💳 <strong>קישור תשלום נפתח בחלון חדש</strong><br>
+                🔗 אם החלון לא נפתח, לחצו <a href="${paymentUrl}" target="_blank" style="color: var(--text-secondary); text-decoration: underline;">כאן לתשלום</a><br>
+                ⚠️ אנא השלימו את התשלום כדי לאשר את ההזמנה
+            `, 'bot');
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('compareModal');
+            if (e.target === modal) {
+                closeCompare();
+            }
+        });
+    </script>
+</body>
+</html>

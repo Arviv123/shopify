@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>חפש והזמן מוצרים</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <link rel="stylesheet" href="styles/chat.css">
+    <style>
+        /* Customer-specific styles */
+        .customer-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+        
+        .customer-logo {
+            font-size: 42px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .customer-tagline {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .feature-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .feature-description {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .chat-launcher {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s;
+            margin: 30px auto;
+            display: block;
+        }
+        
+        .chat-launcher:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+        
+        .customer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Customer Header -->
+    <div class="customer-header">
+        <div class="customer-container">
+            <div class="customer-logo">🛒 מרקט שופינג חכם</div>
+            <div class="customer-tagline">חפש מוצרים מכל החנויות במקום אחד • השווה מחירים • הזמן בקלות</div>
+            
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="storeCount">-</div>
+                    <div class="stat-label">חנויות מחוברות</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="productCount">-</div>
+                    <div class="stat-label">מוצרים זמינים</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">זמינות</div>
+                </div>
+            </div>
+            
+            <button class="chat-launcher" onclick="startShopping()">
+                🚀 התחל לקנות עכשיו
+            </button>
+        </div>
+    </div>
+
+    <div class="customer-container">
+        <!-- Features -->
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <div class="feature-title">חיפוש חכם</div>
+                <div class="feature-description">
+                    חפש מוצרים בעברית או אנגלית מכל החנויות במקום אחד
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <div class="feature-title">השוואת מחירים</div>
+                <div class="feature-description">
+                    קבל השוואה מיידית של מחירים מכל החנויות המחוברות
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <div class="feature-title">בינה מלאכותית</div>
+                <div class="feature-description">
+                    המלצות אישיות וייעוץ חכם לבחירת המוצר הטוב ביותר
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <div class="feature-title">הזמנה פשוטה</div>
+                <div class="feature-description">
+                    הזמן מוצרים בכמה קליקים ישירות מהצ'אט
+                </div>
+            </div>
+        </div>
+
+        <!-- Shopping Interface -->
+        <div id="shopping-interface" class="hidden">
+            <div id="chat-container"></div>
+        </div>
+    </div>
+
+    <!-- Scripts - Only customer-relevant modules -->
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/stores.js"></script>
+    <script src="js/chat.js"></script>
+    <script>
+        // Customer-specific JavaScript
+        let isShoppingMode = false;
+        let stores = []; // Initialize stores array for chat.js
+        let currentTab = 'chat'; // Default tab for customer interface
+        
+        // Initialize customer interface
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCustomerStats();
+            loadStores(); // Load stores for chat functionality
+        });
+        
+        // Load stores function (required by chat.js)
+        async function loadStores() {
+            try {
+                const response = await fetch('/api/stores');
+                const data = await response.json();
+                stores = data.stores || [];
+                console.log('Stores loaded for customer interface:', stores);
+            } catch (error) {
+                console.error('Error loading stores:', error);
+                stores = [];
+            }
+        }
+        
+        // Load customer statistics
+        async function loadCustomerStats() {
+            try {
+                const response = await fetch('/api/stores');
+                const data = await response.json();
+                
+                document.getElementById('storeCount').textContent = data.stores ? data.stores.length : '0';
+                
+                // Simulate product count (would normally come from API)
+                let totalProducts = 0;
+                if (data.stores && data.stores.length > 0) {
+                    totalProducts = data.stores.length * 150; // Estimate
+                }
+                document.getElementById('productCount').textContent = totalProducts.toLocaleString();
+                
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('storeCount').textContent = '0';
+                document.getElementById('productCount').textContent = '0';
+            }
+        }
+        
+        // Start shopping experience
+        function startShopping() {
+            if (!isShoppingMode) {
+                isShoppingMode = true;
+                
+                // Show chat interface
+                const shoppingInterface = document.getElementById('shopping-interface');
+                shoppingInterface.classList.remove('hidden');
+                
+                // Load and initialize chat component - only once
+                if (!chatInitialized) {
+                    initCustomerChat();
+                }
+                
+                // Smooth scroll to chat
+                shoppingInterface.scrollIntoView({ behavior: 'smooth' });
+                
+                // Update button text
+                const launcher = document.querySelector('.chat-launcher');
+                launcher.textContent = '💬 חזור לצ\'אט';
+                launcher.onclick = scrollToChat;
+            }
+        }
+        
+        // Override populateStoreSelect to prevent multiple calls
+        let storeSelectPopulated = false;
+        const originalPopulateStoreSelect = window.populateStoreSelect;
+        window.populateStoreSelect = function() {
+            if (storeSelectPopulated) return;
+            storeSelectPopulated = true;
+            if (originalPopulateStoreSelect) {
+                originalPopulateStoreSelect();
+            }
+        };
+        
+        // Scroll to chat
+        function scrollToChat() {
+            document.getElementById('shopping-interface').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Override showTab function for customer interface
+        function showTab(tabName) {
+            // In customer mode, we only show chat
+            if (tabName === 'chat') {
+                startShopping();
+            }
+        }
+        
+        // Customer-focused chat initialization
+        let chatInitialized = false; // Prevent multiple initializations
+        
+        async function initCustomerChat() {
+            if (chatInitialized) return; // Prevent re-initialization
+            chatInitialized = true;
+            
+            await loadChatComponent();
+            
+            // Add welcome message for customers - only once
+            setTimeout(() => {
+                const chatMessages = document.getElementById('chatMessages');
+                if (chatMessages && !chatMessages.classList.contains('customer-initialized')) {
+                    chatMessages.classList.add('customer-initialized');
+                    chatMessages.innerHTML = `
+                        <div class="message bot">
+                            🛒 ברוכים הבאים למרקט שופינג חכם! 
+                            <br><br>
+                            אני כאן לעזור לכם למצוא את המוצרים הטובים ביותר במחירים הטובים ביותר.
+                            <br><br>
+                            💡 איך זה עובד:
+                            <br>• כתבו מה אתם מחפשים (למשל: "לפטופ גיימינג" או "בגדי ילדים")
+                            <br>• אקבל עבורכם השוואת מחירים מכל החנויות
+                            <br>• תוכלו להזמין ישירות מהצ'אט
+                            <br><br>
+                            מה תרצו לחפש היום? 🔍
+                        </div>
+                    `;
+                }
+            }, 200);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+/* Main Styles */
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    direction: rtl;
+}
+
+.header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 20px 0;
+    text-align: center;
+    color: white;
+}
+
+.logo {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.tagline {
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.tab-navigation {
+    display: flex;
+    justify-content: center;
+    margin: 30px 0;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    padding: 5px;
+    backdrop-filter: blur(10px);
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.tab {
+    background: transparent;
+    border: none;
+    color: white;
+    padding: 15px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 16px;
+    white-space: nowrap;
+}
+
+.tab.active {
+    background: white;
+    color: #667eea;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.tab-content {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    margin-top: 20px;
+    min-height: 500px;
+}
+
+.hidden { 
+    display: none; 
+}
+
+/* Loading and Status */
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 50px;
+    color: #666;
+}
+
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .tab-navigation {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .tab {
+        width: 90%;
+        text-align: center;
+    }
+    
+    .container {
+        padding: 10px;
+    }
+    
+    .tab-content {
+        padding: 20px;
+    }
+    
+    .logo {
+        font-size: 24px;
+    }
+}
