@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import path from 'path';
@@ -52,7 +52,7 @@ function saveConfig(config: ShopifyConfig): void {
 }
 
 // API Routes
-app.get('/api/config', (req, res) => {
+app.get('/api/config', (req: Request, res: Response) => {
   const config = loadConfig();
   if (config) {
     // Don't send the access token to the client
@@ -68,7 +68,7 @@ app.get('/api/config', (req, res) => {
   }
 });
 
-app.post('/api/connect', async (req, res) => {
+app.post('/api/connect', async (req: Request, res: Response) => {
   try {
     const { storeUrl, accessToken } = req.body;
 
@@ -121,7 +121,7 @@ app.post('/api/connect', async (req, res) => {
   }
 });
 
-app.post('/api/disconnect', (req, res) => {
+app.post('/api/disconnect', (req: Request, res: Response) => {
   try {
     const config = loadConfig();
     if (config) {
@@ -135,7 +135,7 @@ app.post('/api/disconnect', (req, res) => {
   }
 });
 
-app.post('/api/test-connection', async (req, res) => {
+app.post('/api/test-connection', async (req: Request, res: Response) => {
   try {
     const config = loadConfig();
     if (!config || !config.isConnected) {
@@ -164,7 +164,7 @@ app.post('/api/test-connection', async (req, res) => {
 });
 
 // Generate Claude Desktop configuration
-app.get('/api/claude-config', (req, res) => {
+app.get('/api/claude-config', (req: Request, res: Response) => {
   const config = loadConfig();
   if (!config || !config.isConnected) {
     return res.status(400).json({ error: 'No store connected' });
@@ -189,7 +189,7 @@ app.get('/api/claude-config', (req, res) => {
 });
 
 // Serve the main HTML page
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 

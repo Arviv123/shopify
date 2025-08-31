@@ -1,7 +1,5 @@
 import axios from 'axios';
 export class ShopifyClient {
-    client;
-    storeUrl;
     constructor(storeUrl, accessToken) {
         this.storeUrl = storeUrl.replace(/\/$/, ''); // Remove trailing slash
         this.client = axios.create({

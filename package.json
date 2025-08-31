@@ -1,47 +1,47 @@
 {
-    "name":  "shopify-mcp-server",
-    "version":  "1.0.0",
-    "description":  "MCP server for Shopify API integration",
-    "type":  "module",
-    "main":  "build/index.js",
-    "bin":  {
-                "shopify-mcp-server":  "./build/index.js"
-            },
-    "scripts":  {
-                    "build":  "tsc",
-                    "dev":  "npm run build \u0026\u0026 node web-app.js",
-                    "start":  "node web-app.js",
-                    "mcp":  "npm run build \u0026\u0026 node build/index.js",
-                    "postinstall":  "npm run build"
-                },
-    "engines":  {
-                    "node":  "\u003e=18.0.0",
-                    "npm":  "\u003e=8.0.0"
-                },
-    "keywords":  [
-                     "mcp",
-                     "shopify",
-                     "api",
-                     "server"
-                 ],
-    "dependencies":  {
-                         "@modelcontextprotocol/sdk":  "^1.17.4",
-                         "amadeus":  "^11.0.0",
-                         "axios":  "^1.11.0",
-                         "body-parser":  "^1.20.0",
-                         "cors":  "^2.8.5",
-                         "dotenv":  "^17.2.1",
-                         "express":  "^4.21.2",
-                         "node-fetch":  "^3.3.2",
-                         "uuid":  "^11.1.0",
-                         "zod":  "^4.1.1"
-                     },
-    "devDependencies":  {
-                            "@types/body-parser":  "^1.19.6",
-                            "@types/cors":  "^2.8.19",
-                            "@types/express":  "^4.17.23",
-                            "@types/minimatch":  "^6.0.0",
-                            "@types/node":  "^20.19.11",
-                            "typescript":  "^5.9.2"
-                        }
+    "name": "shopify-mcp-server",
+    "version": "1.0.0",
+    "description": "MCP server for Shopify API integration",
+    "type": "module",
+    "main": "build/index.js",
+    "bin": {
+        "shopify-mcp-server": "./build/index.js"
+    },
+    "scripts": {
+        "build": "tsc",
+        "dev": "npm run build && node web-app.js",
+        "start": "node web-app.js",
+        "mcp": "npm run build && node build/index.js",
+        "postinstall": "npm run build"
+    },
+    "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=8.0.0"
+    },
+    "keywords": [
+        "mcp",
+        "shopify",
+        "api",
+        "server"
+    ],
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.17.4",
+        "amadeus": "^11.0.0",
+        "axios": "^1.11.0",
+        "body-parser": "^1.20.0",
+        "cors": "^2.8.5",
+        "dotenv": "^17.2.1",
+        "express": "^4.21.2",
+        "node-fetch": "^3.3.2",
+        "uuid": "^11.1.0",
+        "zod": "^4.1.1"
+    },
+    "devDependencies": {
+        "@types/body-parser": "^1.19.6",
+        "@types/cors": "^2.8.19",
+        "@types/express": "^4.17.23",
+        "@types/minimatch": "^6.0.0",
+        "@types/node": "^20.19.11",
+        "typescript": "^5.9.2"
+    }
 }

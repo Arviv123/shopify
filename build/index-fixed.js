@@ -4,8 +4,6 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ErrorCode, ListToolsRequestSchema, McpError, } from "@modelcontextprotocol/sdk/types.js";
 import { ShopifyClient } from "./shopify-client.js";
 class ShopifyMCPServer {
-    server;
-    shopifyClient;
     constructor() {
         this.server = new Server({
             name: "shopify-mcp-server",
