@@ -64,7 +64,8 @@ export function createGeminiService(apiKey = process.env.GEMINI_API_KEY) {
 
     try {
       // Send message and get streaming response
-      const result = await chat.sendMessageStream(latestMessage.parts);
+      const messageText = latestMessage.parts.map(part => part.text).join('');
+      const result = await chat.sendMessageStream(messageText);
 
       let fullResponse = "";
       let toolCalls = [];
