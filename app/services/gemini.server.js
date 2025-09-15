@@ -54,18 +54,13 @@ export function createGeminiService(apiKey = process.env.GEMINI_API_KEY) {
     // Convert message format for Gemini
     const geminiMessages = convertMessagesForGemini(messages);
 
-    // Start chat session
-    const chat = model.startChat({
-      history: geminiMessages.slice(0, -1), // All messages except the last one
-    });
-
-    // Get the latest user message
+    // Get the latest user message text
     const latestMessage = geminiMessages[geminiMessages.length - 1];
+    const messageText = latestMessage.parts.map(part => part.text).join('');
 
     try {
-      // Send message and get streaming response
-      const messageText = latestMessage.parts.map(part => part.text).join('');
-      const result = await chat.sendMessageStream(messageText);
+      // Send message directly to model (not using chat history for now)
+      const result = await model.generateContentStream(messageText);
 
       let fullResponse = "";
       let toolCalls = [];
