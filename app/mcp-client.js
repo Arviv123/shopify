@@ -17,11 +17,19 @@ class MCPClient {
     this.tools = [];
     this.customerTools = [];
     this.storefrontTools = [];
-    // TODO: Make this dynamic, for that first we need to allow access of mcp tools on password proteted demo stores.
-    this.storefrontMcpEndpoint = `${hostUrl}/api/mcp`;
 
-    const accountHostUrl = hostUrl.replace(/(\.myshopify\.com)$/, '.account$1');
-    this.customerMcpEndpoint = customerMcpEndpoint || `${accountHostUrl}/customer/api/mcp`;
+    // Handle null or undefined hostUrl
+    if (!hostUrl) {
+      console.warn('No hostUrl provided to MCPClient, using default endpoints');
+      this.storefrontMcpEndpoint = null;
+      this.customerMcpEndpoint = customerMcpEndpoint || null;
+    } else {
+      // TODO: Make this dynamic, for that first we need to allow access of mcp tools on password proteted demo stores.
+      this.storefrontMcpEndpoint = `${hostUrl}/api/mcp`;
+      const accountHostUrl = hostUrl.replace(/(\.myshopify\.com)$/, '.account$1');
+      this.customerMcpEndpoint = customerMcpEndpoint || `${accountHostUrl}/customer/api/mcp`;
+    }
+
     this.customerAccessToken = "";
     this.conversationId = conversationId;
     this.shopId = shopId;
@@ -36,6 +44,11 @@ class MCPClient {
    */
   async connectToCustomerServer() {
     try {
+      if (!this.customerMcpEndpoint) {
+        console.warn('No customer MCP endpoint available, skipping customer server connection');
+        return [];
+      }
+
       console.log(`Connecting to MCP server at ${this.customerMcpEndpoint}`);
 
       if (this.conversationId) {
@@ -84,6 +97,11 @@ class MCPClient {
    */
   async connectToStorefrontServer() {
     try {
+      if (!this.storefrontMcpEndpoint) {
+        console.warn('No storefront MCP endpoint available, skipping storefront server connection');
+        return [];
+      }
+
       console.log(`Connecting to MCP server at ${this.storefrontMcpEndpoint}`);
 
       const headers = {
