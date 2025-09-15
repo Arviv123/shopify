@@ -2,7 +2,7 @@
 
 client_id = "d5c1607251ee7052aee9f05404ec3586"
 name = "shop-chat-agent"
-application_url = "https://stones-confusion-warnings-butter.trycloudflare.com"
+application_url = "https://shopify-1-6vx3.onrender.com"
 embedded = true
 handle = "shop-chat-agent-1058"
 
@@ -18,7 +18,7 @@ api_version = "2025-07"
 scopes = "customer_read_customers,customer_read_orders,customer_read_store_credit_account_transactions,customer_read_store_credit_accounts,unauthenticated_read_product_listings"
 
 [auth]
-redirect_urls = ["https://stones-confusion-warnings-butter.trycloudflare.com/auth/callback", "https://stones-confusion-warnings-butter.trycloudflare.com/auth/shopify/callback", "https://stones-confusion-warnings-butter.trycloudflare.com/api/auth/callback"]
+redirect_urls = ["https://shopify-1-6vx3.onrender.com/auth/callback", "https://shopify-1-6vx3.onrender.com/auth/shopify/callback", "https://shopify-1-6vx3.onrender.com/api/auth/callback"]
 
 [pos]
 embedded = false
