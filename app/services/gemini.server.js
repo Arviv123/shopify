@@ -59,26 +59,21 @@ export function createGeminiService(apiKey = process.env.GEMINI_API_KEY) {
     const messageText = latestMessage.parts.map(part => part.text).join('');
 
     try {
-      // Send message directly to model (not using chat history for now)
-      const result = await model.generateContentStream(messageText);
+      // Send message directly to model (non-streaming for now)
+      const result = await model.generateContent(messageText);
+      const response = result.response;
 
-      let fullResponse = "";
+      let fullResponse = response.text();
       let toolCalls = [];
 
-      // Process streaming chunks
-      for await (const chunk of result.stream) {
-        const chunkText = chunk.text();
-        if (chunkText) {
-          fullResponse += chunkText;
-          if (streamHandlers.onText) {
-            streamHandlers.onText(chunkText);
-          }
-        }
+      // Send text immediately
+      if (fullResponse && streamHandlers.onText) {
+        streamHandlers.onText(fullResponse);
+      }
 
-        // Check for function calls (tool usage)
-        if (chunk.functionCalls && chunk.functionCalls.length > 0) {
-          toolCalls = chunk.functionCalls;
-        }
+      // Check for function calls (tool usage)
+      if (response.functionCalls && response.functionCalls.length > 0) {
+        toolCalls = response.functionCalls;
       }
 
       // Create final message in Claude-compatible format
