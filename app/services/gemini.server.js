@@ -199,13 +199,13 @@ export function createGeminiService(apiKey = process.env.GEMINI_API_KEY) {
    * @returns {Array} Tools in Gemini format
    */
   const convertToolsForGemini = (tools) => {
-    return tools.map(tool => ({
-      functionDeclaration: {
+    return [{
+      functionDeclarations: tools.map(tool => ({
         name: tool.name,
         description: tool.description,
         parameters: tool.input_schema
-      }
-    }));
+      }))
+    }];
   };
 
   /**
