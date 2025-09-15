@@ -12,6 +12,15 @@ import systemPrompts from "../prompts/prompts.json";
  * @returns {Object} Gemini service with methods for interacting with Gemini API
  */
 export function createGeminiService(apiKey = process.env.GEMINI_API_KEY) {
+  // Debug logging
+  console.log('Creating Gemini service with API key:', apiKey ? 'API key provided' : 'No API key');
+  console.log('Environment GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? 'Available' : 'Not available');
+
+  if (!apiKey) {
+    console.error('No Gemini API key provided!');
+    throw new Error('Authentication failed with Gemini API - Please check your API key in environment variables');
+  }
+
   // Initialize Gemini client
   const genAI = new GoogleGenerativeAI(apiKey);
 
