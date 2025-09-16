@@ -56,27 +56,39 @@ export function createGeminiService(apiKey = process.env.GEMINI_API_KEY) {
     const geminiMessages = convertMessagesForGemini(messages);
 
     try {
-      // Debug logging before API call
-      console.log('Gemini API call parameters:');
-      console.log('geminiMessages:', JSON.stringify(geminiMessages, null, 2));
-      console.log('tools available:', tools ? tools.length : 0);
+      // Hardcoded test to isolate the issue
+      console.log('Testing Gemini with hardcoded message...');
 
-      // Use streaming API with full conversation history
+      const testContents = [
+        {
+          role: "user",
+          parts: [{ text: "Hello from Gemini test! Please respond with a short greeting." }]
+        }
+      ];
+
+      console.log('Test contents:', JSON.stringify(testContents, null, 2));
+
+      // Use streaming API with hardcoded test message
       const result = await model.generateContentStream({
-        contents: geminiMessages
+        contents: testContents
       });
 
       let fullResponse = '';
       let toolCalls = [];
 
       // Process streaming chunks
+      console.log('Starting to process stream chunks...');
       for await (const chunk of result.stream) {
+        console.log('Received chunk:', chunk);
         const chunkText = chunk.text();
+        console.log('Chunk text:', chunkText);
         if (chunkText && streamHandlers.onText) {
           fullResponse += chunkText;
+          console.log('Sending text to handler:', chunkText);
           streamHandlers.onText(chunkText);
         }
       }
+      console.log('Finished processing all chunks. Full response:', fullResponse);
 
       // Get final response for tool calls check
       const finalResult = await result.response;
