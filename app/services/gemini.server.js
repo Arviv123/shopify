@@ -54,14 +54,10 @@ export function createGeminiService(apiKey = process.env.GEMINI_API_KEY) {
     // Convert message format for Gemini
     const geminiMessages = convertMessagesForGemini(messages);
 
-    // Get the latest user message text
-    const latestMessage = geminiMessages[geminiMessages.length - 1];
-    const messageText = latestMessage.parts.map(part => part.text).join('');
-
     try {
-      // Use streaming API for real-time response
+      // Use streaming API with full conversation history
       const result = await model.generateContentStream({
-        contents: [{ parts: [{ text: messageText }] }]
+        contents: geminiMessages
       });
 
       let fullResponse = '';
@@ -153,11 +149,14 @@ export function createGeminiService(apiKey = process.env.GEMINI_API_KEY) {
    * @returns {Array} Messages in Gemini format
    */
   const convertMessagesForGemini = (messages) => {
-    return messages.map(message => {
+    return messages.filter(message => message.role !== "tool").map(message => {
       if (message.role === "user") {
+        const content = typeof message.content === 'string' ? message.content :
+                       Array.isArray(message.content) ? message.content.find(c => c.type === "text")?.text || '' :
+                       message.content[0]?.text || '';
         return {
           role: "user",
-          parts: [{ text: typeof message.content === 'string' ? message.content : message.content[0]?.text || '' }]
+          parts: [{ text: content }]
         };
       } else if (message.role === "assistant") {
         const parts = [];
@@ -181,25 +180,12 @@ export function createGeminiService(apiKey = process.env.GEMINI_API_KEY) {
 
         return {
           role: "model",
-          parts: parts
-        };
-      } else if (message.role === "tool") {
-        // Handle tool response messages
-        return {
-          role: "function",
-          parts: [{
-            functionResponse: {
-              name: message.tool_use_id || "unknown_tool",
-              response: typeof message.content === 'string' ?
-                { result: message.content } :
-                message.content
-            }
-          }]
+          parts: parts.length > 0 ? parts : [{ text: "" }]
         };
       }
 
-      return message;
-    });
+      return null;
+    }).filter(Boolean);
   };
 
   /**
