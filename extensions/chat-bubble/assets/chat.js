@@ -1,11 +1,14 @@
 /**
  * Shop AI Chat - Client-side implementation
+ * Version: 3.0.0 - Fixed regex and dynamic URLs
  *
  * This module handles the chat interface for the Shopify AI Chat application.
  * It manages the UI interactions, API communication, and message rendering.
  */
 (function() {
   'use strict';
+
+  console.log('Chat.js v3.0.0 loaded');
 
   /**
    * Utility function to escape RegExp special characters
@@ -488,7 +491,8 @@
             prompt_type: promptType
           });
 
-          const streamUrl = 'https://shopify-9gbi.onrender.com/chat';
+          const baseUrl = window.location.origin;
+          const streamUrl = `${baseUrl}/chat`;
           const shopId = window.shopId;
 
           const response = await fetch(streamUrl, {
@@ -637,7 +641,8 @@
           messagesContainer.appendChild(loadingMessage);
 
           // Fetch history from the server
-          const historyUrl = `https://shopify-9gbi.onrender.com/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;
+          const baseUrl = window.location.origin;
+          const historyUrl = `${baseUrl}/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;
           console.log('Fetching history from:', historyUrl);
 
           const response = await fetch(historyUrl, {
@@ -786,8 +791,8 @@
           attemptCount++;
 
           try {
-            const tokenUrl = 'https://shopify-9gbi.onrender.com/auth/token-status?conversation_id=' +
-              encodeURIComponent(conversationId);
+            const baseUrl = window.location.origin;
+            const tokenUrl = `${baseUrl}/auth/token-status?conversation_id=${encodeURIComponent(conversationId)}`;
             const response = await fetch(tokenUrl);
 
             if (!response.ok) {
