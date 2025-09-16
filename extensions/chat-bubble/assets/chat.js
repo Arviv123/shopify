@@ -8,6 +8,13 @@
   'use strict';
 
   /**
+   * Utility function to escape RegExp special characters
+   */
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  /**
    * Application namespace to prevent global scope pollution
    */
   const ShopAIChat = {

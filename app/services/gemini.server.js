@@ -48,8 +48,7 @@ export function createGeminiService(apiKey = process.env.GEMINI_API_KEY) {
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       systemInstruction: systemInstruction,
-      // Temporarily disable tools to test streaming
-      // tools: tools && tools.length > 0 ? convertToolsForGemini(tools) : undefined
+      tools: tools && tools.length > 0 ? convertToolsForGemini(tools) : undefined
     });
 
     // Convert message format for Gemini
