@@ -155,6 +155,7 @@ class MCPClient {
         headers
       );
 
+      console.log("MCP Storefront Tool Response:", JSON.stringify(response, null, 2));
       return response.result || response;
     } catch (error) {
       console.error(`Error calling tool ${toolName}:`, error);
