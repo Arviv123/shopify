@@ -45,16 +45,22 @@ export function createGeminiService(apiKey = process.env.GEMINI_API_KEY) {
     const systemInstruction = getSystemPrompt(promptType);
 
     // Initialize the model with system instruction and tools
+    // Temporarily disable tools to test basic functionality
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       systemInstruction: systemInstruction,
-      tools: tools && tools.length > 0 ? convertToolsForGemini(tools) : undefined
+      // tools: tools && tools.length > 0 ? convertToolsForGemini(tools) : undefined
     });
 
     // Convert message format for Gemini
     const geminiMessages = convertMessagesForGemini(messages);
 
     try {
+      // Debug logging before API call
+      console.log('Gemini API call parameters:');
+      console.log('geminiMessages:', JSON.stringify(geminiMessages, null, 2));
+      console.log('tools available:', tools ? tools.length : 0);
+
       // Use streaming API with full conversation history
       const result = await model.generateContentStream({
         contents: geminiMessages
