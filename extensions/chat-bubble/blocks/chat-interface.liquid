@@ -30,8 +30,8 @@
   </div>
 </div>
 
-<script src="{{ 'chat-v3.js' | asset_url }}" defer></script>
-<!-- Force rebuild: v3.0.0 -->
+<script src="{{ 'chat-v3.js' | asset_url }}?v=final-cache-fix" defer></script>
+<!-- Force rebuild: v3.0.0 with cache buster -->
 <script>
   window.shopChatConfig = {
     promptType: {{ block.settings.system_prompt | json }},

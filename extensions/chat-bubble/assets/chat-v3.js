@@ -9,6 +9,7 @@
   'use strict';
 
   console.log('🎉 Chat.js v3.0.0 loaded - All cache issues fixed!');
+  console.log('🔥 FORCE RELOAD - This is definitely the NEW chat-v3.js file! 🔥');
 
   /**
    * Utility function to escape RegExp special characters
