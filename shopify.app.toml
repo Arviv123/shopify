@@ -22,7 +22,3 @@ redirect_urls = [ "https://shopify-9gbi.onrender.com/api/auth" ]
 [pos]
 embedded = false
 
-[mcp.customer_authentication]
-redirect_uris = [
-  "https://shopify-9gbi.onrender.com/callback"
-]

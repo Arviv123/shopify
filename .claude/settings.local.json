@@ -18,7 +18,8 @@
       "Bash(shopify app deploy:*)",
       "Bash(cat:*)",
       "Bash(explorer \"C:\\Users\\חיים\\shop-chat-agent\")",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(shopify auth:*)"
     ],
     "deny": [],
     "ask": []
