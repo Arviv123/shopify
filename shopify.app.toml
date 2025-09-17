@@ -2,7 +2,7 @@
 
 client_id = "d5c1607251ee7052aee9f05404ec3586"
 name = "shop-chat-agent"
-handle = "shop-chat-agent"
+handle = "shop-chat-agent-v2"
 application_url = "https://shopify-9gbi.onrender.com"
 embedded = true
 
