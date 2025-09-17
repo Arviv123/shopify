@@ -7,17 +7,20 @@ application_url = "https://shopify-9gbi.onrender.com"
 embedded = true
 
 [build]
-include_config_on_deploy = true
 
 [webhooks]
-api_version = "2025-04"
+api_version = "2025-07"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "write_products,read_product_listings,read_customers,read_orders,unauthenticated_read_product_listings"
 
 [auth]
-redirect_urls = [ "https://shopify-9gbi.onrender.com/api/auth" ]
+redirect_urls = [
+  "https://shopify-9gbi.onrender.com/auth/callback",
+  "https://shopify-9gbi.onrender.com/auth/shopify/callback",
+  "https://shopify-9gbi.onrender.com/api/auth/callback"
+]
 
 [pos]
 embedded = false
