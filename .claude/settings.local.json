@@ -16,7 +16,9 @@
       "Bash(curl:*)",
       "Bash(shopify app generate:*)",
       "Bash(shopify app deploy:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(explorer \"C:\\Users\\חיים\\shop-chat-agent\")",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
